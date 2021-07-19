@@ -9,7 +9,7 @@ authors = "Mathew Polzin"
 -- sourceloc =
 -- bugtracker =
 
--- depends = 
+depends = contrib
 
 modules = Main
 

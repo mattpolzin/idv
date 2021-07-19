@@ -1,4 +1,4 @@
 
 /build
-*.idr.swp
+*.swp
 *.idr~
