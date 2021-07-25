@@ -8,6 +8,7 @@ import System.Directory.Extra
 import System.Console.Extra
 import System.Path
 
+import IdrvPaths
 import Git
 
 exitError : HasIO io => String -> io a
@@ -16,25 +17,6 @@ exitError err = do
   putStrLn err
   putStrLn ""
   exitFailure
-
-execLocation : HasIO io => io (Maybe String)
-execLocation = (parent =<<) . head' <$> readLines (limit 1) False "which idrv"
---   where
---     dropLastPathComponent : String -> Maybe String
---     dropLastPathComponent = parent
--- 
---     nonEmpty : String -> Maybe String
---     nonEmpty "" = Nothing
---     nonEmpty str = Just str
-
-idrisRepoURL : String
-idrisRepoURL = "https://github.com/idris-lang/Idris2.git"
-
-relativeCheckoutPath : String
-relativeCheckoutPath = "../checkout"
-
-relativeVersionsPath : String
-relativeVersionsPath = "../versions"
 
 handleSubcommand : HasIO io => List String -> io Bool
 handleSubcommand ("list" :: xs) = do
@@ -55,9 +37,7 @@ run = do
 
 main : IO ()
 main = do
-  Just execLoc <- execLocation
-    | Nothing => exitError "Could not find install location for idrv."
-  Just _ <- inDir execLoc run
-    | Nothing => exitError "Could not access \{execLoc}."
+  Just _ <- inDir execLocation run
+    | Nothing => exitError "Could not access \{execLocation}."
   pure ()
 

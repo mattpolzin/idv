@@ -9,6 +9,7 @@ all: build
 .PHONY: build install clean
 
 build:
+	@EXECDIR="$(EXECDIR)" ./generate_paths.sh
 	idris2 --build idrv.ipkg
 
 install:
