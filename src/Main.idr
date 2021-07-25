@@ -1,12 +1,9 @@
 module Main
 
 import Data.List
+import Data.Version
 import System
 import System.Console.GetOpt
-
--- tmp
-import System.Console.Extra
--- /tmp
 
 import Git
 

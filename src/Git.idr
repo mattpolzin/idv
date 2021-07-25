@@ -1,11 +1,7 @@
 module Git
 
 import Data.List
-import Data.List1
-import Data.Maybe
-import Data.String
-import Data.Vect
-import System
+import Data.Version
 import System.Console.Extra
 import System.Directory.Extra
 
@@ -42,31 +38,6 @@ listTags path = do
   Just tags <- inDir path $ readLines (limit 1000) False "git tag --list"
     | _ => pure []
   pure tags
-
-public export
-data Version : Type where
-  V : (major : Nat) -> (minor : Nat) -> (patch : Nat) -> Version
-
-export
-Show Version where
-  show (V major minor patch) = "\{show major}.\{show minor}.\{show patch}"
-
-version : Vect 3 Nat -> Version
-version [x, y, z] = V x y z
-
-parseVersion : String -> Maybe Version
-parseVersion str = do
-    let components = split (== '.') $ dropPrefix str
-    nums <- sequence $ map parsePositive components
-    version <$> toVect 3 (forget nums)
-  where
-    dropPrefix : String -> String
-    dropPrefix str with (strM str)
-      dropPrefix "" | StrNil = ""
-      dropPrefix _ | (StrCons x xs) =
-        if x == 'v'
-           then xs
-           else str
 
 export
 listVersions : HasIO io => (path : String) -> io (List Version)
