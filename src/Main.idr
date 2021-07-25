@@ -18,14 +18,20 @@ exitError err = do
   putStrLn ""
   exitFailure
 
-handleSubcommand : HasIO io => List String -> io Bool
-handleSubcommand ("list" :: xs) = do
+listVersions : HasIO io => io Bool
+listVersions = do
   True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
     | False => exitError "Failed to clone Idris repository into local folder."
   ignore $ fetch relativeCheckoutPath
   versions <- listVersions relativeCheckoutPath
   printLn versions
   pure True
+
+handleSubcommand : HasIO io => List String -> io Bool
+handleSubcommand ["list"] = listVersions
+handleSubcommand ("list" :: more) = do
+  putStrLn "unknown arguments to list command: \{unwords more}."
+  listVersions
 handleSubcommand _ = pure False
 
 run : IO ()
@@ -33,6 +39,10 @@ run = do
   args <- drop 1 <$> getArgs
   False <- handleSubcommand args
     | True => pure ()
+  if length args /= 0
+     then putStrLn "Unknown subcommand: \{unwords args}"
+     else putStrLn "Expected a subcommand."
+  -- TODO: print usage.
   pure ()
 
 main : IO ()
