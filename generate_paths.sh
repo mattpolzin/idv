@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 FILE=./src/IdrvPaths/Generated.idr
 
