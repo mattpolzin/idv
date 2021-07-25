@@ -1,9 +1,14 @@
 module Main
 
-import Git
+import Data.List
 import System
 import System.Console.GetOpt
-import Data.List
+
+-- tmp
+import System.Console.Extra
+-- /tmp
+
+import Git
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -22,6 +27,9 @@ handleSubcommand : HasIO io => List String -> io Bool
 handleSubcommand ("list" :: xs) = do
   True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
     | False => exitError "Failed to clone Idris repository into local folder."
+  ignore $ fetch relativeCheckoutPath
+  versions <- listVersions relativeCheckoutPath
+  printLn versions
   pure True
 handleSubcommand _ = pure False
 
@@ -29,5 +37,5 @@ main : IO ()
 main = do
   args <- drop 1 <$> getArgs
   False <- handleSubcommand args
-    | True => putStrLn "Done 1"
-  putStrLn "Done 2"
+    | True => pure ()
+  pure ()

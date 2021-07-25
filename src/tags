@@ -1,0 +1,30 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+V	Git.idr	/^  V : (major : Nat) -> (minor : Nat) -> (patch : Nat) -> Version$/;"	d
+Version	Git.idr	/^data Version : Type where$/;"	t
+_	Git.idr	/^fetch path = [ True | _ <- inDir path $ eatOutput True "git fetch --tags" ]$/;"	c
+clone	Git.idr	/^clone : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
+cloneIfNeeded	Git.idr	/^cloneIfNeeded : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
+createDirIfNeeded	System/Directory/Extra.idr	/^createDirIfNeeded : HasIO io => (path : String) -> io Bool$/;"	d
+dropPrefix	Git.idr	/^    dropPrefix : String -> String$/;"	d
+eatOutput	System/Console/Extra.idr	/^eatOutput : HasIO io => (ignoreStdErr : Bool) -> (cmd : String) -> io Bool$/;"	d
+exitError	Main.idr	/^exitError : HasIO io => String -> io a$/;"	d
+fetch	Git.idr	/^fetch : HasIO io => (path : String) -> io Bool$/;"	d
+handleSubcommand	Main.idr	/^handleSubcommand : HasIO io => List String -> io Bool$/;"	d
+idrisRepoURL	Main.idr	/^idrisRepoURL : String$/;"	d
+ignoreStdErr	System/Console/Extra.idr	/^ignoreStdErr : String$/;"	d
+inDir	System/Directory/Extra.idr	/^inDir : HasIO io => (path : String) -> io a -> io (Maybe a)$/;"	d
+listTags	Git.idr	/^listTags : HasIO io => (path : String) -> io (List String)$/;"	d
+listVersions	Git.idr	/^listVersions : HasIO io => (path : String) -> io (List Version)$/;"	d
+main	Main.idr	/^main : IO ()$/;"	d
+parseVersion	Git.idr	/^parseVersion : String -> Maybe Version$/;"	d
+readLines	System/Console/Extra.idr	/^readLines : HasIO io => Fuel -> (ignoreStdErr : Bool) -> (cmd : String) -> io (List String)$/;"	d
+readLines'	System/Console/Extra.idr	/^    readLines' : Fuel -> File -> List String -> io (List String)$/;"	d
+redirectStdErr	System/Console/Extra.idr	/^redirectStdErr : String$/;"	d
+relativeCheckoutPath	Main.idr	/^relativeCheckoutPath : String$/;"	d
+repoExists	Git.idr	/^repoExists : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
+version	Git.idr	/^version : Vect 3 Nat -> Version$/;"	d

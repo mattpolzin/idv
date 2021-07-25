@@ -1,50 +1,28 @@
 module Git
 
-import System
-import System.File
-import System.Directory
+import Data.List
+import Data.List1
 import Data.Maybe
-
-createDirIfNeeded : HasIO io => (path : String) -> io Bool
-createDirIfNeeded path =
-  pure $ 
-    case !(createDir path) of
-         Right ()        => True
-         Left FileExists => True
-         _               => False
-
-inDir : HasIO io => (path : String) -> io a -> io (Maybe a)
-inDir path ops = do
-  Just cwd <- currentDir
-    | Nothing => pure Nothing
-  True <- changeDir path
-    | False => pure Nothing
-  res <- ops
-  ignore $ changeDir cwd
-  pure (Just res)
-
-||| Eat the stdout and return the exit status.
-eatOutput : HasIO io => (cmd : String) -> io Int
-eatOutput cmd = do
-  Right h <- popen cmd Read
-    | Left e => pure (-1)
-  Right c <- fGetChar h
-    | Left _ => do putStrLn "file error"
-                   pure (-1)
-  pclose h
+import Data.String
+import Data.Vect
+import System
+import System.Console.Extra
+import System.Directory.Extra
 
 repoExists : HasIO io => (repoURL : String) -> (path : String) -> io Bool
 repoExists repoURL path = do
-  Just 0 <- inDir path $ eatOutput "git status"
-    | Nothing => do putStrLn "here"
-                    pure False
-    | (Just x) => do putStrLn $ "there " ++ (show x)
-                     pure False
+  Just True <- inDir path $ eatOutput True "git status"
+    | _ => pure False
   pure True
 
 clone : HasIO io => (repoURL : String) -> (path : String) -> io Bool
-clone repoURL path = [ res == 0 | res <- system "git clone '\{repoURL}' '\{path}'" ]
+clone repoURL path = eatOutput False "git clone '\{repoURL}' '\{path}'"
 
+||| Clone the given repository into the given path if the path does
+||| not already contain a git repository.
+|||
+||| Returns True if the directory already contained a repo or if the
+||| repo was successfully cloned into the requested path.
 export
 cloneIfNeeded : HasIO io => (repoURL : String) -> (path : String) -> io Bool
 cloneIfNeeded repoURL path = do
@@ -52,5 +30,45 @@ cloneIfNeeded repoURL path = do
     | False => pure False
   False <- repoExists repoURL path
     | True => pure True
+  putStrLn "Cloning Idris 2 repository..."
   clone repoURL path
+
+export
+fetch : HasIO io => (path : String) -> io Bool
+fetch path = [ True | _ <- inDir path $ eatOutput True "git fetch --tags" ]
+
+listTags : HasIO io => (path : String) -> io (List String)
+listTags path = do
+  Just tags <- inDir path $ readLines (limit 1000) False "git tag --list"
+    | _ => pure []
+  pure tags
+
+public export
+data Version : Type where
+  V : (major : Nat) -> (minor : Nat) -> (patch : Nat) -> Version
+
+export
+Show Version where
+  show (V major minor patch) = "\{show major}.\{show minor}.\{show patch}"
+
+version : Vect 3 Nat -> Version
+version [x, y, z] = V x y z
+
+parseVersion : String -> Maybe Version
+parseVersion str = do
+    let components = split (== '.') $ dropPrefix str
+    nums <- sequence $ map parsePositive components
+    version <$> toVect 3 (forget nums)
+  where
+    dropPrefix : String -> String
+    dropPrefix str with (strM str)
+      dropPrefix "" | StrNil = ""
+      dropPrefix _ | (StrCons x xs) =
+        if x == 'v'
+           then xs
+           else str
+
+export
+listVersions : HasIO io => (path : String) -> io (List Version)
+listVersions path = pure $ mapMaybe parseVersion !(listTags path)
 
