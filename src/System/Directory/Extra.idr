@@ -35,7 +35,6 @@ inDir path ops = do
     | Nothing => pure Nothing
   Just dir <- pathExpansion path
     | Nothing => pure Nothing
-  putStrLn dir
   True <- changeDir dir
     | False => pure Nothing
   res <- ops
