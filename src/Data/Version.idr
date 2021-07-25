@@ -5,20 +5,22 @@ import Data.String
 import Data.Vect
 
 public export
-data Version : Type where
-  V : (major : Nat) -> (minor : Nat) -> (patch : Nat) -> Version
+record Version where
+  constructor V
+  major, minor, patch : Nat
+  tag : String
 
 export
 Show Version where
-  show (V major minor patch) = "\{show major}.\{show minor}.\{show patch}"
+  show (V major minor patch _) = "\{show major}.\{show minor}.\{show patch}"
 
 export
 Eq Version where
-  (V major minor patch) == (V k j i) = major == k && minor == j && patch == i
+  (V major minor patch _) == (V k j i _) = major == k && minor == j && patch == i
 
 export
 Ord Version where
-  compare (V major minor patch) (V k j i) = 
+  compare (V major minor patch _) (V k j i _) = 
     case compare major k of
          LT => LT
          GT => GT
@@ -27,15 +29,15 @@ Ord Version where
                     GT => GT
                     EQ => compare patch i
 
-version : Vect 3 Nat -> Version
-version [x, y, z] = V x y z
+version : (tag : String) -> Vect 3 Nat -> Version
+version tag [x, y, z] = V x y z tag
 
 export
 parseVersion : String -> Maybe Version
 parseVersion str = do
     let components = split (== '.') $ dropPrefix str
     nums <- sequence $ map parsePositive components
-    version <$> toVect 3 (forget nums)
+    version str <$> toVect 3 (forget nums)
   where
     dropPrefix : String -> String
     dropPrefix str with (strM str)

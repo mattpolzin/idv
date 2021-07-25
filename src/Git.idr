@@ -5,9 +5,10 @@ import Data.Version
 import System.Console.Extra
 import System.Directory.Extra
 
-repoExists : HasIO io => (repoURL : String) -> (path : String) -> io Bool
-repoExists repoURL path = do
-  Just True <- inDir path $ eatOutput True "git status"
+||| Check if there is a repo in the current working directory.
+repoExists : HasIO io => io Bool
+repoExists = do
+  True <- eatOutput True "git status"
     | _ => pure False
   pure True
 
@@ -24,22 +25,47 @@ cloneIfNeeded : HasIO io => (repoURL : String) -> (path : String) -> io Bool
 cloneIfNeeded repoURL path = do
   True <- createDirIfNeeded path
     | False => pure False
-  False <- repoExists repoURL path
-    | True => pure True
+  Just False <- inDir path $ repoExists
+    | _ => pure True
   putStrLn "Cloning Idris 2 repository..."
   clone repoURL path
 
+||| Fetch the repo in the current working directory.
 export
-fetch : HasIO io => (path : String) -> io Bool
-fetch path = [ True | _ <- inDir path $ eatOutput True "git fetch --tags" ]
+fetch : HasIO io => io Bool
+fetch = [ res == 0 | res <- ignoreOutput "git fetch --tags" ]
 
-listTags : HasIO io => (path : String) -> io (List String)
-listTags path = do
-  Just tags <- inDir path $ readLines (limit 1000) False "git tag --list"
-    | _ => pure []
+||| Pull the repo in the current working directory.
+export
+pull : HasIO io => io Bool
+pull = [ res == 0 | res <- ignoreOutput "git pull --tags" ]
+
+listTags : HasIO io => io (List String)
+listTags = do
+  tags <- readLines (limit 1000) False "git tag --list"
   pure tags
 
+||| List the versions for the repo in the current working directory.
+|||
+||| Versions are all git tags formatted as <major>.<minor>.<patch> and
+||| optionally prefixed with 'v'.
 export
-listVersions : HasIO io => (path : String) -> io (List Version)
-listVersions path = pure $ mapMaybe parseVersion !(listTags path)
+listVersions : HasIO io => io (List Version)
+listVersions = pure $ mapMaybe parseVersion !listTags
+
+||| Fetch git tags and then list versions.
+export
+fetchAndListVersions : HasIO io => io (List Version)
+fetchAndListVersions = do
+  ignore fetch
+  listVersions
+
+export
+checkout : HasIO io => (tag : String) -> io Bool
+checkout tag = [ res == 0 | res <- ignoreOutput "git checkout \{tag}" ]
+
+export
+checkoutAndPullBranch : HasIO io => (branch : String) -> io Bool
+checkoutAndPullBranch branch = 
+  pure $ !(checkout branch) && !pull
 
