@@ -12,7 +12,7 @@ import System.File.Extra
 import System.Path
 
 import Git
-import IdrvPaths
+import IdvPaths
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -22,13 +22,13 @@ exitError err = do
   exitFailure
 
 ||| Get the name of the directory where the given version is installed
-||| This is the directory relative to `idrvLocation`/`relativeVersionsPath`
+||| This is the directory relative to `idvLocation`/`relativeVersionsPath`
 versionDir : Version -> String
 versionDir (V major minor patch _) = "\{show major}_\{show minor}_\{show patch}"
 
 buildPrefix : Version -> String
 buildPrefix version = 
-  idrvLocation </> relativeVersionsPath </> (versionDir version)
+  idvLocation </> relativeVersionsPath </> (versionDir version)
 
 systemIdrisPath : String
 systemIdrisPath = 
@@ -36,16 +36,18 @@ systemIdrisPath =
 
 installedIdrisPath : Version -> String
 installedIdrisPath version = 
-  idrvLocation </> relativeVersionsPath </> (versionDir version) </> "bin" </> "idris2"
+  idvLocation </> relativeVersionsPath </> (versionDir version) </> "bin" </> "idris2"
 
 idrisSymlinkedPath : String
 idrisSymlinkedPath = 
-  idrvLocation </> relativeBinPath </> "idris2"
+  idvLocation </> relativeBinPath </> "idris2"
 
-||| Assumes the current working directory is the `idrvLocation`.
+||| Assumes the current working directory is the `idvLocation`.
 createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
-  True <- createDirIfNeeded $ relativeVersionsPath </> (versionDir version)
+  Just resolvedVersionsDir <- pathExpansion $ idvLocation </> relativeVersionsPath </> (versionDir version)
+    | Nothing => exitError "Could not resolve install directory for new Idris2 version."
+  True <- createDirIfNeeded $ resolvedVersionsDir
     | False => exitError "Could not create install directory for new Idris2 version."
   pure ()
 
@@ -242,7 +244,7 @@ run = do
 
 main : IO ()
 main = do
-  Just _ <- inDir idrvLocation run
-    | Nothing => exitError "Could not access \{idrvLocation}."
+  Just _ <- inDir idvLocation run
+    | Nothing => exitError "Could not access \{idvLocation}."
   pure ()
 

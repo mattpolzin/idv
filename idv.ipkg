@@ -1,4 +1,4 @@
-package idrv
+package idv
 -- version =
 authors = "Mathew Polzin"
 -- maintainers =
@@ -15,7 +15,7 @@ modules = Main
 
 main = Main
 
-executable = idrv
+executable = idv
 -- opts =
 sourcedir = "src"
 -- builddir =

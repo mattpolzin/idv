@@ -1,6 +1,6 @@
-module IdrvPaths
+module IdvPaths
 
-import public IdrvPaths.Generated
+import public IdvPaths.Generated
 
 export
 idrisRepoURL : String
