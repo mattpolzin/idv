@@ -10,6 +10,8 @@ record Version where
   major, minor, patch : Nat
   tag : String
 
+%name Version version
+
 export
 Show Version where
   show (V major minor patch _) = "\{show major}.\{show minor}.\{show patch}"
