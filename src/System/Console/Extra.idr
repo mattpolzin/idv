@@ -55,7 +55,11 @@ readLines fuel ignStdErr cmd = do
   where
     readLines' : Fuel -> File -> List String -> io (List String)
     readLines' Dry _ acc = pure $ reverse acc
-    readLines' (More fuel) h acc = do
-      Right l <- fGetLine h
-        | Left _ => readLines' Dry h acc
-      readLines' fuel h (l :: acc)
+    readLines' (More fuel) h acc =
+      if !(fEOF h)
+         then readLines' Dry h acc
+         else do
+           Right l <- fGetLine h
+             | Left _ => readLines' Dry h acc
+           readLines' fuel h (l :: acc)
+

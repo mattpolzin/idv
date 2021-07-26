@@ -14,3 +14,7 @@ export
 relativeVersionsPath : String
 relativeVersionsPath = "versions"
 
+export
+relativeBinPath : String
+relativeBinPath = "bin"
+

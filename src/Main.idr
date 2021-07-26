@@ -1,16 +1,18 @@
 module Main
 
 import Data.List
-import Data.Version
-import Data.String
 import Data.Maybe
+import Data.String
+import Data.Version
 import System
-import System.Directory.Extra
 import System.Console.Extra
+import System.Directory.Extra
+import System.File
+import System.File.Extra
 import System.Path
 
-import IdrvPaths
 import Git
+import IdrvPaths
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -28,9 +30,17 @@ buildPrefix : Version -> String
 buildPrefix version = 
   idrvLocation </> relativeVersionsPath </> (versionDir version)
 
+systemIdrisPath : String
+systemIdrisPath = 
+  "~" </> ".idris2" </> "bin" </> "idris2"
+
 installedIdrisPath : Version -> String
 installedIdrisPath version = 
   idrvLocation </> relativeVersionsPath </> (versionDir version) </> "bin" </> "idris2"
+
+idrisSymlinkedPath : String
+idrisSymlinkedPath = 
+  idrvLocation </> relativeBinPath </> "idris2"
 
 ||| Assumes the current working directory is the `idrvLocation`.
 createVersionsDir : HasIO io => Version -> io ()
@@ -145,6 +155,44 @@ installCommand versionStr = do
          createVersionsDir version
          buildAndInstall version
 
+unselect : HasIO io => io ()
+unselect = do
+  Just lnFile <- pathExpansion $ idrisSymlinkedPath
+    | Nothing => exitError "Could not resolve Idris 2 symlink path."
+  Right () <- removeFile lnFile
+    | Left FileNotFound => pure () -- no problem here, job done.
+    | Left err => exitError "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{show err}."
+  pure ()
+
+selectCommand : HasIO io => (versionStr : String) -> io ()
+selectCommand versionStr = do
+  case parseVersion versionStr of
+       Nothing      => exitError "Could not parse \{versionStr} as a version."
+       Just version => do
+         unselect
+         let proposedInstalled = installedIdrisPath version
+         let proposedSymlinked = idrisSymlinkedPath
+         Just installed <- pathExpansion proposedInstalled
+           | Nothing => exitError "Could not resolve install location: \{proposedInstalled}."
+         Just linked <- pathExpansion proposedSymlinked
+           | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
+         True <- symlink installed linked
+           | False => exitError "Failed to create symlink for Idris 2 version \{show version}."
+         pure ()
+
+selectSystemCommand : HasIO io => io ()
+selectSystemCommand = do
+  unselect
+  let proposedInstalled = systemIdrisPath
+  let proposedSymlinked = idrisSymlinkedPath
+  Just installed <- pathExpansion proposedInstalled
+    | Nothing => exitError "Could not resolve install location: \{proposedInstalled}."
+  Just linked <- pathExpansion proposedSymlinked
+    | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
+  True <- symlink installed linked
+    | False => exitError "Failed to create symlink for Idris 2 system install."
+  pure ()
+
 ||| Handle a subcommand and return True if the input has
 ||| been handled or False if no action has been taken based
 ||| on the input.
@@ -161,8 +209,19 @@ handleSubcommand ["install", version] = do
   pure True
 handleSubcommand ("install" :: more) = do
   if length more == 0
-     then putStrLn "Install command expects <version> argument."
+     then putStrLn "Install command expects a <version> argument."
      else putStrLn "Bad arguments to install command: \{unwords more}."
+  pure True
+handleSubcommand ["select", "system"] = do
+  selectSystemCommand
+  pure True
+handleSubcommand ["select", version] = do
+  selectCommand version
+  pure True
+handleSubcommand ("select" :: more) = do
+  if length more == 0
+     then putStrLn "Select command expects a <version> argument."
+     else putStrLn "Bad arguments to select command: \{unwords more}."
   pure True
 handleSubcommand _ = pure False
 
