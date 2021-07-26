@@ -20,19 +20,19 @@ exitError err = do
   exitFailure
 
 ||| Get the name of the directory where the given version is installed
-||| This is the directory relative to `execLocation`/`relativeVersionsPath`
+||| This is the directory relative to `idrvLocation`/`relativeVersionsPath`
 versionDir : Version -> String
 versionDir (V major minor patch _) = "\{show major}_\{show minor}_\{show patch}"
 
 buildPrefix : Version -> String
 buildPrefix version = 
-  execLocation </> relativeVersionsPath </> (versionDir version)
+  idrvLocation </> relativeVersionsPath </> (versionDir version)
 
 installedIdrisPath : Version -> String
 installedIdrisPath version = 
-  execLocation </> relativeVersionsPath </> (versionDir version) </> "bin" </> "idris2"
+  idrvLocation </> relativeVersionsPath </> (versionDir version) </> "bin" </> "idris2"
 
-||| Assumes the current working directory is the `execLocation`.
+||| Assumes the current working directory is the `idrvLocation`.
 createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
   True <- createDirIfNeeded $ relativeVersionsPath </> (versionDir version)
@@ -183,7 +183,7 @@ run = do
 
 main : IO ()
 main = do
-  Just _ <- inDir execLocation run
-    | Nothing => exitError "Could not access \{execLocation}."
+  Just _ <- inDir idrvLocation run
+    | Nothing => exitError "Could not access \{idrvLocation}."
   pure ()
 
