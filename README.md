@@ -3,7 +3,7 @@
 
 **Idv** is a simple CLI for installing different versions of Idris 2 on a computer at the same time. It also makes switching between those versions effortless.
 
-_Why the name Idv?_ Idv is short for IDris Version manager and it's executable (`idv`) importantly shares very few characters in common with `idris2` (the name of the Idris 2 compiler & REPL executable). The latter point means that `idv` does not hurt your tab completion too much because you can still tab complete to `idris2` after the first three characters.
+_Why the name Idv?_ Idv is short for IDris Version manager and its executable (`idv`) importantly shares very few characters in common with `idris2` (the name of the Idris 2 compiler & REPL executable). The latter point means that `idv` does not hurt your tab completion too much because you can still tab complete to `idris2` after the first three characters.
 
 ## How it works
 
