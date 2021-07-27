@@ -152,9 +152,17 @@ listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
   True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
     | False => exitError "Failed to clone Idris2 repository into local folder."
-  Just versions <- inDir relativeCheckoutPath fetchAndListVersions
-    | Nothing => exitError "Failed to retrieve versions."
-  printLn versions
+  Just remoteVersions <- inDir relativeCheckoutPath fetchAndListVersions
+    | Nothing => exitError "Failed to retrieve remote versions."
+  Just localVersions <- Local.listVersions
+    | Nothing => exitError "Failed to list local versions."
+  traverse_ putStrLn $ printVersion <$> zipMatch localVersions remoteVersions
+    where
+      printVersion : (Maybe Version, Maybe Version) -> String
+      printVersion (Just v, Just _)  = "\{show v} (installed)"
+      printVersion (Nothing, Just v) = show v
+      printVersion (Just v, Nothing) = "\{show v} (missing)"
+      printVersion (Nothing, Nothing) = ""
 
 installCommand : HasIO io => (versionStr : String) -> io ()
 installCommand versionStr =
