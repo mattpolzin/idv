@@ -12,6 +12,7 @@ import System.File.Extra
 import System.Path
 
 import Git
+import Local
 import IdvPaths
 
 exitError : HasIO io => String -> io a
@@ -20,6 +21,13 @@ exitError err = do
   putStrLn err
   putStrLn ""
   exitFailure
+
+exitSuccess : HasIO io => String -> io a
+exitSuccess msg = do
+  putStrLn ""
+  putStrLn msg
+  putStrLn ""
+  exitSuccess
 
 ||| Get the name of the directory where the given version is installed
 ||| This is the directory relative to `idvLocation`/`relativeVersionsPath`
@@ -42,7 +50,6 @@ idrisSymlinkedPath : String
 idrisSymlinkedPath = 
   idvLocation </> relativeBinPath </> "idris2"
 
-||| Assumes the current working directory is the `idvLocation`.
 createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
   Just resolvedVersionsDir <- pathExpansion $ idvLocation </> relativeVersionsPath </> (versionDir version)
@@ -150,7 +157,7 @@ listVersionsCommand = do
   printLn versions
 
 installCommand : HasIO io => (versionStr : String) -> io ()
-installCommand versionStr = do
+installCommand versionStr =
   case parseVersion versionStr of
        Nothing      => exitError "Could not parse \{versionStr} as a version."
        Just version => do
@@ -168,8 +175,14 @@ unselect = do
 
 selectCommand : HasIO io => (versionStr : String) -> io ()
 selectCommand versionStr = do
-  case parseVersion versionStr of
-       Nothing      => exitError "Could not parse \{versionStr} as a version."
+  Just localVersions <- Local.listVersions
+    | Nothing => exitError "Could not look up local versions."
+  let parsedVersion = parseVersion versionStr
+  let condition = (==) <$> parsedVersion
+  case (flip find localVersions) =<< condition of
+       Nothing      => if isNothing parsedVersion 
+                          then exitError "Could not parse \{versionStr} as a version."
+                          else exitError "Idris 2 version \{versionStr} is not installed.\nInstalled versions: \{show localVersions}."
        Just version => do
          unselect
          let proposedInstalled = installedIdrisPath version
@@ -180,7 +193,7 @@ selectCommand versionStr = do
            | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
          True <- symlink installed linked
            | False => exitError "Failed to create symlink for Idris 2 version \{show version}."
-         pure ()
+         exitSuccess "Idris 2 version \{show version} selected."
 
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
@@ -193,7 +206,7 @@ selectSystemCommand = do
     | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
   True <- symlink installed linked
     | False => exitError "Failed to create symlink for Idris 2 system install."
-  pure ()
+  exitSuccess "System copy of Idris 2 selected."
 
 ||| Handle a subcommand and return True if the input has
 ||| been handled or False if no action has been taken based
