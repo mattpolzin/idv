@@ -4,48 +4,77 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-bootstrapBuild	Main.idr	/^bootstrapBuild : HasIO io => Version -> io Bool$/;"	d
+>	Main.idr	/^        Just exec <- pure $ !chezExec <|> !schemeExec <|> !envExec$/;"	c
+Subcommands	Main.idr	/^    Subcommands:$/;"	d
+\nUsage	Main.idr	/^  \\nUsage: idv <subcommand>$/;"	d
+bootstrapBuild	Main.idr	/^      bootstrapBuild : io Bool$/;"	d
+build	Main.idr	/^build : HasIO io => (idrisExecutable : Version) -> (installedDir : String) -> (buildPrefix : String) -> io Bool$/;"	d
 buildAndInstall	Main.idr	/^buildAndInstall : HasIO io => Version -> io ()$/;"	d
 buildPrefix	Main.idr	/^buildPrefix : Version -> String$/;"	d
 checkout	Git.idr	/^checkout : HasIO io => (tag : String) -> io Bool$/;"	d
-checkoutAndBuild	Main.idr	/^checkoutAndBuild : HasIO io => (resolvedVersion : Version) -> io ()$/;"	d
+checkoutAndBuild	Main.idr	/^checkoutAndBuild : HasIO io => (resolvedVersion : Version) -> (buildPrefix : String) -> io ()$/;"	d
 checkoutAndPullBranch	Git.idr	/^checkoutAndPullBranch : HasIO io => (branch : String) -> io Bool$/;"	d
+chezExec	Main.idr	/^      chezExec : io (Maybe String)$/;"	d
+clean	Main.idr	/^clean : HasIO io => io Bool$/;"	d
+cleanAndBuild	Main.idr	/^cleanAndBuild : HasIO io => Version -> (installedDir : String) -> (buildPrefix : String) -> io ()$/;"	d
 clone	Git.idr	/^clone : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
 cloneIfNeeded	Git.idr	/^cloneIfNeeded : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
 createDirIfNeeded	System/Directory/Extra.idr	/^createDirIfNeeded : HasIO io => (path : String) -> io Bool$/;"	d
 createVersionsDir	Main.idr	/^createVersionsDir : HasIO io => Version -> io ()$/;"	d
 dropPrefix	Data/Version.idr	/^    dropPrefix : String -> String$/;"	d
 eatOutput	System/Console/Extra.idr	/^eatOutput : HasIO io => (ignoreStdErr : Bool) -> (cmd : String) -> io Bool$/;"	d
-execLocation	IdrvPaths/Generated.idr	/^execLocation : String$/;"	d
+envExec	Main.idr	/^      envExec : io (Maybe String)$/;"	d
 exitError	Main.idr	/^exitError : HasIO io => String -> io a$/;"	d
+exitSuccess	Main.idr	/^exitSuccess : HasIO io => String -> io a$/;"	d
 fetch	Git.idr	/^fetch : HasIO io => io Bool$/;"	d
 fetchAndListVersions	Git.idr	/^fetchAndListVersions : HasIO io => io (List Version)$/;"	d
+go	Data/Version.idr	/^    go : List Version -> List Version -> (acc : List (Maybe Version, Maybe Version)) -> List (Maybe Version, Maybe Version)$/;"	d
 handleSubcommand	Main.idr	/^handleSubcommand : HasIO io => List String -> io Bool$/;"	d
-idrisRepoURL	IdrvPaths.idr	/^idrisRepoURL : String$/;"	d
+idrisRepoURL	IdvPaths.idr	/^idrisRepoURL : String$/;"	d
+idrisSymlinkedPath	Main.idr	/^idrisSymlinkedPath : String$/;"	d
+idvLocation	IdvPaths/Generated.idr	/^idvLocation : String$/;"	d
 ignoreOutput	System/Console/Extra.idr	/^ignoreOutput : HasIO io => (cmd : String) -> io Int$/;"	d
 ignoreStdErr	System/Console/Extra.idr	/^ignoreStdErr : String$/;"	d
 ignoreStdOut	System/Console/Extra.idr	/^ignoreStdOut : String$/;"	d
 inDir	System/Directory/Extra.idr	/^inDir : HasIO io => (path : String) -> io a -> io (Maybe a)$/;"	d
-install	Main.idr	/^install : HasIO io => Version -> io ()$/;"	d
+install	Main.idr	/^install : HasIO io => (installOver : Bool) -> (installedDir : String) -> Version -> (buildPrefix : String) -> io ()$/;"	d
 installCommand	Main.idr	/^installCommand : HasIO io => (versionStr : String) -> io ()$/;"	d
+installedIdrisPath	Main.idr	/^installedIdrisPath : Version -> String$/;"	d
 listTags	Git.idr	/^listTags : HasIO io => io (List String)$/;"	d
 listVersions	Git.idr	/^listVersions : HasIO io => io (List Version)$/;"	d
+listVersions	Local.idr	/^listVersions : HasIO io => io (Maybe (List Version))$/;"	d
 listVersionsCommand	Main.idr	/^listVersionsCommand : HasIO io => io ()$/;"	d
 main	Main.idr	/^main : IO ()$/;"	d
+parseFolderEntries	Local.idr	/^      parseFolderEntries : List String -> List Version$/;"	d
 parseVersion	Data/Version.idr	/^parseVersion : String -> Maybe Version$/;"	d
 pathExpansion	System/Directory/Extra.idr	/^pathExpansion : HasIO io => (path : String) -> io (Maybe String)$/;"	d
+printVersion	Main.idr	/^      printVersion : (Maybe Version, Maybe Version) -> String$/;"	d
 pull	Git.idr	/^pull : HasIO io => io Bool$/;"	d
 readLines	System/Console/Extra.idr	/^readLines : HasIO io => Fuel -> (ignoreStdErr : Bool) -> (cmd : String) -> io (List String)$/;"	d
 readLines'	System/Console/Extra.idr	/^    readLines' : Fuel -> File -> List String -> io (List String)$/;"	d
 redirectStdErr	System/Console/Extra.idr	/^redirectStdErr : String$/;"	d
-relativeCheckoutPath	IdrvPaths.idr	/^relativeCheckoutPath : String$/;"	d
-relativeVersionsPath	IdrvPaths.idr	/^relativeVersionsPath : String$/;"	d
+relativeBinPath	IdvPaths.idr	/^relativeBinPath : String$/;"	d
+relativeCheckoutPath	IdvPaths.idr	/^relativeCheckoutPath : String$/;"	d
+relativeVersionsPath	IdvPaths.idr	/^relativeVersionsPath : String$/;"	d
+replaceUnderscores	Local.idr	/^      replaceUnderscores : String -> String$/;"	d
 repoExists	Git.idr	/^repoExists : HasIO io => io Bool$/;"	d
 res	Git.idr	/^checkout tag = [ res == 0 | res <- ignoreOutput "git checkout \\{tag}" ]$/;"	c
 res	Git.idr	/^fetch = [ res == 0 | res <- ignoreOutput "git fetch --tags" ]$/;"	c
 res	Git.idr	/^pull = [ res == 0 | res <- ignoreOutput "git pull --tags" ]$/;"	c
+res	Main.idr	/^clean = [ res == 0 | res <- system "make clean" ]$/;"	c
+res	System/File/Extra.idr	/^  [ res == 0 | res <- if isWindows$/;"	c
 run	Main.idr	/^run : IO ()$/;"	d
+schemeExec	Main.idr	/^      schemeExec : io (Maybe String)$/;"	d
+selectCommand	Main.idr	/^selectCommand : HasIO io => (versionStr : String) -> io ()$/;"	d
+selectSystemCommand	Main.idr	/^selectSystemCommand : HasIO io => io ()$/;"	d
+symlink	System/File/Extra.idr	/^symlink : HasIO io => (from : String) -> (to : String) -> io Bool$/;"	d
+systemIdrisPath	Main.idr	/^systemIdrisPath : String$/;"	d
 tag	Data/Version.idr	/^  tag : String$/;"	d
+unselect	Main.idr	/^unselect : HasIO io => io ()$/;"	d
 updateMainBranch	Main.idr	/^updateMainBranch : HasIO io => io ()$/;"	d
 version	Data/Version.idr	/^version : (tag : String) -> Vect 3 Nat -> Version$/;"	d
 versionDir	Main.idr	/^versionDir : Version -> String$/;"	d
+versionFolders	Local.idr	/^      versionFolders : (path : String) -> io (Maybe (List String))$/;"	d
+versions	Local.idr	/^      versions : (path : String) -> io (Maybe (List Version))$/;"	d
+versionsDir	Local.idr	/^versionsDir : String$/;"	d
+zipMatch	Data/Version.idr	/^zipMatch : List Version -> List Version -> List (Maybe Version, Maybe Version)$/;"	d
