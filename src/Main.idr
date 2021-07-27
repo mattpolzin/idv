@@ -96,12 +96,25 @@ checkoutAndBuild version buildPrefix = do
     | False => exitError "Failed to build Idris2 version \{show version}."
   pure ()
     where
+      chezExec : io (Maybe String)
+      chezExec = pure $ if !(eatOutput True "which chez") then Just "chez" else Nothing
+
+      schemeExec : io (Maybe String)
+      schemeExec = pure $ if !(eatOutput True "which scheme") then Just "scheme" else Nothing
+
+      envExec : io (Maybe String)
+      envExec = getEnv "SCHEME"
+
+
       bootstrapBuild : io Bool
-      bootstrapBuild = 
-        [ res == 0 | res <- system "make clean && PREFIX=\"\{buildPrefix}\" SCHEME=chez make bootstrap" ]
-        -- TODO: ^ support other possible Chez Scheme incantations.
-        --       use which to locate either 'scheme' or 'chez'?
-        --       fall back to ENV variable for SCHEME?
+      bootstrapBuild = do
+        Just exec <- pure $ !chezExec <|> !schemeExec <|> !envExec
+          | Nothing => do
+              putStrLn "Could not find Scheme executable. Specify executable to use with SCHEME environment variable."
+              pure False
+        putStrLn "Building with Scheme executable: \{exec}"
+        res <- system "make clean && PREFIX=\"\{buildPrefix}\" SCHEME=\"\{exec}\" make bootstrap"
+        pure $ res == 0
 
 ||| Assumes the current working directory is an Idris repository.
 ||| If `installOver` is True, the Idris 2 executable in the versions
@@ -260,7 +273,15 @@ run = do
   if length args /= 0
      then putStrLn "Unknown subcommand: \{unwords args}"
      else putStrLn "Expected a subcommand."
-  -- TODO: print usage.
+  putStrLn """ 
+  \nUsage: idv <subcommand>
+
+    Subcommands:
+     - list                 list all installed and available Idris 2 versions.
+     - install <version>    install the given Idris 2 version.
+     - select <version>     select the given (already installed) Idris 2 version.
+     - select system        select the system Idris 2 install (generally ~/.idris2/bin/idris2).
+  """
   pure ()
 
 main : IO ()
