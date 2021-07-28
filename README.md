@@ -22,7 +22,7 @@ _Ironically_, Idv is not currently available as a prebuilt binary, which means y
 
 Snag a copy of Idris 2 (or build it from source) and install it as normal. Idv will let you switch to your system copy in addition to versions installed by Idv, so it is not a total loss to have Idris 2 installed outside of Idv.
 
-NOTE: For now, Idv will always assume the system Idris 2 install is located at the default path of `~/.idris2/bin`.
+By default, Idv assumes the system copy of Idris 2 has been installed to `~/.idris2/bin/idris2`. You can specify a different location to look for Idris 2 by setting the `IDRIS2` environment variable when running `make`.
 
 ## Installation
 

@@ -29,30 +29,26 @@ exitSuccess msg = do
   putStrLn ""
   exitSuccess
 
-||| Get the name of the directory where the given version is installed
-||| This is the directory relative to `idvLocation`/`relativeVersionsPath`
-versionDir : Version -> String
-versionDir (V major minor patch _) = "\{show major}_\{show minor}_\{show patch}"
+||| The install location of the system copy of Idris 2.
+||| If Idris 2 cannot be located on the system (i.e.
+||| outside of the Idv versions directory) this function
+||| returns Nothing.
+systemIdrisPath : HasIO io => io (Maybe String)
+systemIdrisPath = do
+  Nothing <- checkLocation =<< getEnv "IDRIS2"
+    | Just envOverride => pure $ Just envOverride
+  checkLocation =<< defaultPath
+    where
+      defaultPath : io (Maybe String)
+      defaultPath = pathExpansion $ defaultIdris2Location
 
-buildPrefix : Version -> String
-buildPrefix version = 
-  idvLocation </> relativeVersionsPath </> (versionDir version)
-
-systemIdrisPath : String
-systemIdrisPath = 
-  "~" </> ".idris2" </> "bin" </> "idris2"
-
-installedIdrisPath : Version -> String
-installedIdrisPath version = 
-  idvLocation </> relativeVersionsPath </> (versionDir version) </> "bin" </> "idris2"
-
-idrisSymlinkedPath : String
-idrisSymlinkedPath = 
-  idvLocation </> relativeBinPath </> "idris2"
+      checkLocation : Maybe String -> io (Maybe String)
+      checkLocation Nothing     = pure Nothing
+      checkLocation (Just path) = pure $ if !(exists path) then Just path else Nothing
 
 createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
-  Just resolvedVersionsDir <- pathExpansion $ idvLocation </> relativeVersionsPath </> (versionDir version)
+  Just resolvedVersionsDir <- pathExpansion $ versionPath version
     | Nothing => exitError "Could not resolve install directory for new Idris2 version."
   True <- createDirIfNeeded $ resolvedVersionsDir
     | False => exitError "Could not create install directory for new Idris2 version."
@@ -169,12 +165,15 @@ listVersionsCommand = do
     | Nothing => exitError "Failed to retrieve remote versions."
   Just localVersions <- Local.listVersions
     | Nothing => exitError "Failed to list local versions."
+  systemInstall <- systemIdrisPath
+  when (isJust systemInstall) $
+    putStrLn "system (installed)"
   traverse_ putStrLn $ printVersion <$> zipMatch localVersions remoteVersions
     where
       printVersion : (Maybe Version, Maybe Version) -> String
-      printVersion (Just v, Just _)  = "\{show v} (installed)"
+      printVersion (Just v, Just _)  = "\{show v}  (installed)"
       printVersion (Nothing, Just v) = show v
-      printVersion (Just v, Nothing) = "\{show v} (missing)"
+      printVersion (Just v, Nothing) = "\{show v}  (local only)"
       printVersion (Nothing, Nothing) = ""
 
 installCommand : HasIO io => (versionStr : String) -> io ()
@@ -219,10 +218,9 @@ selectCommand versionStr = do
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
   unselect
-  let proposedInstalled = systemIdrisPath
   let proposedSymlinked = idrisSymlinkedPath
-  Just installed <- pathExpansion proposedInstalled
-    | Nothing => exitError "Could not resolve install location: \{proposedInstalled}."
+  Just installed <- systemIdrisPath
+    | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
   Just linked <- pathExpansion proposedSymlinked
     | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
   True <- symlink installed linked

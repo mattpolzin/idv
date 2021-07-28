@@ -1,5 +1,6 @@
 
 INSTALLDIR ?= ~/.idv
+IDRIS2 ?= ~/.idris2/bin/idris2
 
 EXECDIR = $(INSTALLDIR)/bin
 IDRISVERSIONDIR = $(INSTALLDIR)/versions
@@ -9,7 +10,7 @@ all: build
 .PHONY: build install clean
 
 build:
-	@INSTALLDIR="$(INSTALLDIR)" ./generate_paths.sh
+	@INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
 	idris2 --build idv.ipkg
 
 install:
