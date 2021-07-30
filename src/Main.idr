@@ -259,7 +259,7 @@ selectCommand versionStr = do
        Just version => do
          Right () <- selectVersion version
            | Left err => exitError err
-         exitSuccess "Idris 2 version \{show version} selected."
+         pure ()
 
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
@@ -271,7 +271,7 @@ selectSystemCommand = do
     | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
   True <- symlink installed linked
     | False => exitError "Failed to create symlink for Idris 2 system install."
-  exitSuccess "System copy of Idris 2 selected."
+  pure ()
 
 -- TODO: integrate https://github.com/ohad/collie instead of the following thrown together stuff
 ||| Handle a subcommand and return True if the input has
@@ -290,8 +290,9 @@ handleSubcommand ["install", version] = do
   pure True
 handleSubcommand ["install", version, "--api"] = do
   -- we won't reinstall if not needed:
-  unless !(selectAndCheckout version) $
+  unless !(selectAndCheckout version) $ do
     installCommand version False
+    selectCommand version
   ignore $ inDir relativeCheckoutPath installApi
   pure True
 
@@ -302,10 +303,10 @@ handleSubcommand ("install" :: more) = do
   pure True
 handleSubcommand ["select", "system"] = do
   selectSystemCommand
-  pure True
+  exitSuccess "System copy of Idris 2 selected."
 handleSubcommand ["select", version] = do
   selectCommand version
-  pure True
+  exitSuccess "Idris 2 version \{show version} selected."
 handleSubcommand ("select" :: more) = do
   if length more == 0
      then putStrLn "Select command expects a <version> argument."
