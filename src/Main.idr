@@ -2,6 +2,7 @@ module Main
 
 import Data.List
 import Data.Maybe
+import Data.Either
 import Data.String
 import Data.Version
 import System
@@ -83,12 +84,30 @@ cleanAndBuild version installedDir buildPrefix = do
     | False => exitError "Failed to build the current repository with the Idris executable that should have been installed into \{installedIdrisPath version}."
   pure ()
 
+||| Check out the given version if available (in the checkout folder
+||| in preparation for building against a particular version of the
+||| Idris 2 source code).
+checkoutIfAvailable : HasIO io => Version -> io (Either String ())
+checkoutIfAvailable version = do
+  fromMaybe (Left "Failed to switch to checkout directory.") <$>
+    changeDirAndCheckout
+      where
+        changeDirAndCheckout : io (Maybe (Either String ()))
+        changeDirAndCheckout =
+          inDir relativeCheckoutPath $ do
+            updateMainBranch
+            availableVersions <- listVersions
+            case find (== version) availableVersions of
+                 Nothing => pure $ Left "Version \{show version} is not one of the available versions: \{show availableVersions}."
+                 (Just resolvedVersion) => do 
+                   True <- checkout resolvedVersion.tag
+                     | False => pure $ Left "Could not check out requested version of Idris2."
+                   pure $ Right ()
+
 ||| Assumes the current working directory is an Idris repository.
-checkoutAndBuild : HasIO io => (resolvedVersion : Version) -> (buildPrefix : String) -> io ()
-checkoutAndBuild version buildPrefix = do
-  True <- checkout version.tag
-    | False => exitError "Could not check out requested version of Idris2."
-  True <- bootstrapBuild
+bootstrapBuild : HasIO io => (resolvedVersion : Version) -> (buildPrefix : String) -> io ()
+bootstrapBuild version buildPrefix = do
+  True <- go
     | False => exitError "Failed to build Idris2 version \{show version}."
   pure ()
     where
@@ -102,8 +121,8 @@ checkoutAndBuild version buildPrefix = do
       envExec = getEnv "SCHEME"
 
 
-      bootstrapBuild : io Bool
-      bootstrapBuild = do
+      go : io Bool
+      go = do
         Just exec <- pure $ !chezExec <|> !schemeExec <|> !envExec
           | Nothing => do
               putStrLn "Could not find Scheme executable. Specify executable to use with SCHEME environment variable."
@@ -128,31 +147,79 @@ install installOver installedDir version buildPrefix = do
   putStrLn "Idris2 version \{show version} successfully installed to \{buildPrefix}."
   pure ()
 
-buildAndInstall : HasIO io => Version -> io ()
-buildAndInstall version = do
+buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
+buildAndInstall version cleanAfter = do
+  Right _ <- checkoutIfAvailable version
+    | Left err => exitError err
   moveDirRes <- inDir relativeCheckoutPath $ do
-    updateMainBranch
-    availableVersions <- listVersions
-    case find (== version) availableVersions of
-         Nothing => exitError "Version \{show version} is not one of the available versions: \{show availableVersions}."
-         (Just resolvedVersion) => do 
-           let proposedInstalledDir = installedIdrisPath resolvedVersion
-           let proposedBuildPrefix = buildPrefix resolvedVersion
-           Just installedDir <- pathExpansion proposedInstalledDir
-             | Nothing => exitError "Could not resolve install directory: \{proposedInstalledDir}."
-           Just buildPrefix <- pathExpansion proposedBuildPrefix
-             | Nothing => exitError "Could not resolve build prefix directory: \{proposedBuildPrefix}."
-           -- bootstrap build
-           checkoutAndBuild resolvedVersion buildPrefix
-           install False installedDir resolvedVersion buildPrefix
-           -- non-bootstrap build
-           cleanAndBuild resolvedVersion installedDir buildPrefix
-           install True installedDir resolvedVersion buildPrefix
-           -- clean up
-           ignore $ clean
+    let proposedInstalledDir = installedIdrisPath version
+    let proposedBuildPrefix = buildPrefix version
+    Just installedDir <- pathExpansion proposedInstalledDir
+      | Nothing => exitError "Could not resolve install directory: \{proposedInstalledDir}."
+    Just buildPrefix <- pathExpansion proposedBuildPrefix
+      | Nothing => exitError "Could not resolve build prefix directory: \{proposedBuildPrefix}."
+    -- bootstrap build
+    bootstrapBuild version buildPrefix
+    install False installedDir version buildPrefix
+    -- non-bootstrap build
+    cleanAndBuild version installedDir buildPrefix
+    install True installedDir version buildPrefix
+    when cleanAfter $
+      -- clean up
+      ignore $ clean
   unless (isJust moveDirRes) $ 
     exitError "Failed to install version \{show version}."
 
+installApi : HasIO io => io ()
+installApi = do
+  0 <- system "make install-api"
+    | _ => exitError "Failed to install Idris2 API package."
+  putStrLn ""
+  putStrLn "Idris2 API package successfully installed."
+  ignore $ clean
+
+unselect : HasIO io => io ()
+unselect = do
+  Just lnFile <- pathExpansion $ idrisSymlinkedPath
+    | Nothing => exitError "Could not resolve Idris 2 symlink path."
+  Right () <- removeFile lnFile
+    | Left FileNotFound => pure () -- no problem here, job done.
+    | Left err => exitError "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{show err}."
+  pure ()
+
+||| Attempt to select the given version. Fails if the version
+||| requested is not installed.
+selectVersion : HasIO io => Version -> io (Either String ())
+selectVersion proposedVersion = do
+  Just localVersions <- Local.listVersions
+    | Nothing => pure $ Left "Could not look up local versions."
+  case find (== proposedVersion) localVersions of
+       Nothing      => pure $ Left "Idris 2 version \{show proposedVersion} is not installed.\nInstalled versions: \{show localVersions}."
+       Just version => do
+         unselect
+         let proposedInstalled = installedIdrisPath version
+         let proposedSymlinked = idrisSymlinkedPath
+         Just installed <- pathExpansion proposedInstalled
+           | Nothing => pure $ Left "Could not resolve install location: \{proposedInstalled}."
+         Just linked <- pathExpansion proposedSymlinked
+           | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedSymlinked}."
+         True <- symlink installed linked
+           | False => pure $ Left "Failed to create symlink for Idris 2 version \{show version}."
+         pure $ Right ()
+
+||| Select the given version if it is installed (as in set it as the version used
+||| when the `idris2` command is executed). Then checkout that same version in the
+||| checkout folder where builds are performed.
+selectAndCheckout : HasIO io => (versionStr : String) -> io Bool
+selectAndCheckout version =
+  case parseVersion version of
+       Nothing => pure False
+       Just parsedVersion => do
+         Right _ <- selectVersion parsedVersion
+           | Left _  => pure False
+         Right _ <- checkoutIfAvailable parsedVersion
+           | Left _ => pure False
+         pure True
 --
 -- Commands
 --
@@ -176,43 +243,22 @@ listVersionsCommand = do
       printVersion (Just v, Nothing) = "\{show v}  (local only)"
       printVersion (Nothing, Nothing) = ""
 
-installCommand : HasIO io => (versionStr : String) -> io ()
-installCommand versionStr =
+installCommand : HasIO io => (versionStr : String) -> (cleanAfter : Bool) -> io ()
+installCommand versionStr cleanAfter =
   case parseVersion versionStr of
        Nothing      => exitError "Could not parse \{versionStr} as a version."
        Just version => do
          createVersionsDir version
-         buildAndInstall version
-
-unselect : HasIO io => io ()
-unselect = do
-  Just lnFile <- pathExpansion $ idrisSymlinkedPath
-    | Nothing => exitError "Could not resolve Idris 2 symlink path."
-  Right () <- removeFile lnFile
-    | Left FileNotFound => pure () -- no problem here, job done.
-    | Left err => exitError "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{show err}."
-  pure ()
+         buildAndInstall version cleanAfter
 
 selectCommand : HasIO io => (versionStr : String) -> io ()
 selectCommand versionStr = do
-  Just localVersions <- Local.listVersions
-    | Nothing => exitError "Could not look up local versions."
   let parsedVersion = parseVersion versionStr
-  let condition = (==) <$> parsedVersion
-  case (flip find localVersions) =<< condition of
-       Nothing      => if isNothing parsedVersion 
-                          then exitError "Could not parse \{versionStr} as a version."
-                          else exitError "Idris 2 version \{versionStr} is not installed.\nInstalled versions: \{show localVersions}."
+  case parsedVersion of
+       Nothing      => exitError "Could not parse \{versionStr} as a version."
        Just version => do
-         unselect
-         let proposedInstalled = installedIdrisPath version
-         let proposedSymlinked = idrisSymlinkedPath
-         Just installed <- pathExpansion proposedInstalled
-           | Nothing => exitError "Could not resolve install location: \{proposedInstalled}."
-         Just linked <- pathExpansion proposedSymlinked
-           | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
-         True <- symlink installed linked
-           | False => exitError "Failed to create symlink for Idris 2 version \{show version}."
+         Right () <- selectVersion version
+           | Left err => exitError err
          exitSuccess "Idris 2 version \{show version} selected."
 
 selectSystemCommand : HasIO io => io ()
@@ -227,6 +273,7 @@ selectSystemCommand = do
     | False => exitError "Failed to create symlink for Idris 2 system install."
   exitSuccess "System copy of Idris 2 selected."
 
+-- TODO: integrate https://github.com/ohad/collie instead of the following thrown together stuff
 ||| Handle a subcommand and return True if the input has
 ||| been handled or False if no action has been taken based
 ||| on the input.
@@ -239,8 +286,15 @@ handleSubcommand ("list" :: more) = do
   listVersionsCommand
   pure True
 handleSubcommand ["install", version] = do
-  installCommand version
+  installCommand version True
   pure True
+handleSubcommand ["install", version, "--api"] = do
+  -- we won't reinstall if not needed:
+  unless !(selectAndCheckout version) $
+    installCommand version False
+  ignore $ inDir relativeCheckoutPath installApi
+  pure True
+
 handleSubcommand ("install" :: more) = do
   if length more == 0
      then putStrLn "Install command expects a <version> argument."
