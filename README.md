@@ -43,10 +43,10 @@ Add the `bin` directory inside the chosen install location (by default, `~/.idv/
 ```shell
 Usage: idv <subcommand>
   Subcommands:
-   - list                 list all installed and available Idris 2 versions.
-   - install <version>    install the given Idris 2 version.
-   - select <version>     select the given (already installed) Idris 2 version.
-   - select system        select the system Idris 2 install (generally ~/.idris2/bin/idris2).
+     - list                      list all installed and available Idris 2 versions.
+     - install <version> [--api] install the given Idris 2 version and optionally also install the Idris2 API.
+     - select <version>          select the given (already installed) Idris 2 version.
+     - select system             select the system Idris 2 install (generally ~/.idris2/bin/idris2).
 ```
 
 For example, if you have run `idv install 0.3.0` then you can switch back and forth between the official 0.4.0 version and a version of Idris 2 you've installed from source with the HEAD of the main branch checked out as follows:

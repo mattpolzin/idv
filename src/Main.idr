@@ -330,10 +330,10 @@ run = do
   \nUsage: idv <subcommand>
 
     Subcommands:
-     - list                 list all installed and available Idris 2 versions.
-     - install <version>    install the given Idris 2 version.
-     - select <version>     select the given (already installed) Idris 2 version.
-     - select system        select the system Idris 2 install (generally ~/.idris2/bin/idris2).
+     - list                      list all installed and available Idris 2 versions.
+     - install <version> [--api] install the given Idris 2 version and optionally also install the Idris2 API.
+     - select <version>          select the given (already installed) Idris 2 version.
+     - select system             select the system Idris 2 install (generally ~/.idris2/bin/idris2).
   """
   pure ()
 
