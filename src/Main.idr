@@ -157,6 +157,8 @@ install installOver installedDir version buildPrefix = do
 
 buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
+  True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
+    | False => exitError "Failed to clone Idris2 repository into local folder."
   Right _ <- checkoutIfAvailable version
     | Left err => exitError err
   moveDirRes <- inDir relativeCheckoutPath $ do
