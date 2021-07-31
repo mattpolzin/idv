@@ -120,7 +120,6 @@ bootstrapBuild version buildPrefix = do
       envExec : io (Maybe String)
       envExec = getEnv "SCHEME"
 
-
       go : io Bool
       go = do
         Just exec <- pure $ !chezExec <|> !schemeExec <|> !envExec
@@ -170,6 +169,8 @@ buildAndInstall version cleanAfter = do
   unless (isJust moveDirRes) $ 
     exitError "Failed to install version \{show version}."
 
+||| Assumes the current directory is an Idris 2 repository. Runs only
+||| the install of the Idris 2 API.
 installApi : HasIO io => io ()
 installApi = do
   0 <- system "make install-api"
@@ -177,35 +178,6 @@ installApi = do
   putStrLn ""
   putStrLn "Idris2 API package successfully installed."
   ignore $ clean
-
-unselect : HasIO io => io ()
-unselect = do
-  Just lnFile <- pathExpansion $ idrisSymlinkedPath
-    | Nothing => exitError "Could not resolve Idris 2 symlink path."
-  Right () <- removeFile lnFile
-    | Left FileNotFound => pure () -- no problem here, job done.
-    | Left err => exitError "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{show err}."
-  pure ()
-
-||| Attempt to select the given version. Fails if the version
-||| requested is not installed.
-selectVersion : HasIO io => Version -> io (Either String ())
-selectVersion proposedVersion = do
-  Just localVersions <- Local.listVersions
-    | Nothing => pure $ Left "Could not look up local versions."
-  case find (== proposedVersion) localVersions of
-       Nothing      => pure $ Left "Idris 2 version \{show proposedVersion} is not installed.\nInstalled versions: \{show localVersions}."
-       Just version => do
-         unselect
-         let proposedInstalled = installedIdrisPath version
-         let proposedSymlinked = idrisSymlinkedPath
-         Just installed <- pathExpansion proposedInstalled
-           | Nothing => pure $ Left "Could not resolve install location: \{proposedInstalled}."
-         Just linked <- pathExpansion proposedSymlinked
-           | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedSymlinked}."
-         True <- symlink installed linked
-           | False => pure $ Left "Failed to create symlink for Idris 2 version \{show version}."
-         pure $ Right ()
 
 ||| Select the given version if it is installed (as in set it as the version used
 ||| when the `idris2` command is executed). Then checkout that same version in the
@@ -263,7 +235,8 @@ selectCommand versionStr = do
 
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
-  unselect
+  Right () <- unselect
+    | Left err => exitError err
   let proposedSymlinked = idrisSymlinkedPath
   Just installed <- systemIdrisPath
     | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
@@ -295,7 +268,6 @@ handleSubcommand ["install", version, "--api"] = do
     selectCommand version
   ignore $ inDir relativeCheckoutPath installApi
   pure True
-
 handleSubcommand ("install" :: more) = do
   if length more == 0
      then putStrLn "Install command expects a <version> argument."
