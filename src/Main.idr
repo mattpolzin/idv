@@ -76,7 +76,11 @@ build version installedDir buildPrefix =
   [ res == 0 | res <- system "PREFIX=\"\{buildPrefix}\" IDRIS2_BOOT=\"\{installedDir}\" make" ]
 
 ||| Assumes the current working directory is an Idris repository.
-cleanAndBuild : HasIO io => Version -> (installedDir : String) -> (buildPrefix : String) -> io ()
+cleanAndBuild : HasIO io 
+             => Version 
+             -> (installedDir : String) 
+             -> (buildPrefix : String) 
+             -> io ()
 cleanAndBuild version installedDir buildPrefix = do
   True <- clean
     | False => exitError "Could not clean before building."
@@ -135,7 +139,12 @@ bootstrapBuild version buildPrefix = do
 ||| directory for the version specified will be used (it will be asked
 ||| for the --libdir which affects where Idris installs the std libraries
 ||| included).
-install : HasIO io => (installOver : Bool) -> (installedDir : String) -> Version -> (buildPrefix : String) -> io ()
+install : HasIO io 
+       => (installOver : Bool) 
+       -> (installedDir : String) 
+       -> Version 
+       -> (buildPrefix : String) 
+       -> io ()
 install installOver installedDir version buildPrefix = do
   let executableOverride = if installOver
                               then "IDRIS2_BOOT=\"\{installedDir}\""
@@ -205,15 +214,22 @@ listVersionsCommand = do
   Just localVersions <- Local.listVersions
     | Nothing => exitError "Failed to list local versions."
   systemInstall <- systemIdrisPath
+  selectedVersion <- getSelectedVersion
+  let selected = buildSelectedFn selectedVersion
   when (isJust systemInstall) $
-    putStrLn "system (installed)"
-  traverse_ putStrLn $ printVersion <$> zipMatch localVersions remoteVersions
+    putStrLn $ (if selectedVersion == Nothing then "* " else "  ") ++ "system (installed)"
+  traverse_ putStrLn $ printVersion . selected <$> zipMatch localVersions remoteVersions
     where
-      printVersion : (Maybe Version, Maybe Version) -> String
-      printVersion (Just v, Just _)  = "\{show v}  (installed)"
-      printVersion (Nothing, Just v) = show v
-      printVersion (Just v, Nothing) = "\{show v}  (local only)"
-      printVersion (Nothing, Nothing) = ""
+      printVersion : (Bool, Maybe Version, Maybe Version) -> String
+      printVersion (sel, Just v, Just _)  = (if sel then "* " else "  ") ++ "\{show v}  (installed)"
+      printVersion (_, Nothing, Just v) = "  " ++ show v
+      printVersion (sel, Just v, Nothing) = (if sel then "* " else "  ") ++ "\{show v}  (local only)"
+      printVersion (_, Nothing, Nothing) = ""
+
+      buildSelectedFn : (selectedVersion : Maybe Version) 
+                     -> (Maybe Version, Maybe Version) 
+                     -> (Bool, Maybe Version, Maybe Version)
+      buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
 
 installCommand : HasIO io => (versionStr : String) -> (cleanAfter : Bool) -> io ()
 installCommand versionStr cleanAfter =
@@ -278,7 +294,7 @@ handleSubcommand ["select", "system"] = do
   exitSuccess "System copy of Idris 2 selected."
 handleSubcommand ["select", version] = do
   selectCommand version
-  exitSuccess "Idris 2 version \{show version} selected."
+  exitSuccess "Idris 2 version \{version} selected."
 handleSubcommand ("select" :: more) = do
   if length more == 0
      then putStrLn "Select command expects a <version> argument."

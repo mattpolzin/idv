@@ -1,12 +1,14 @@
 module Local
 
-import Data.List
 import Data.Either
+import Data.List
 import Data.Version
+import System.Console.Extra
 import System.Directory
 import System.Directory.Extra
-import System.Path
+import System.File
 import System.File.Extra
+import System.Path
 
 import IdvPaths
 
@@ -51,7 +53,7 @@ selectVersion proposedVersion = do
   Just localVersions <- listVersions
     | Nothing => pure $ Left "Could not look up local versions."
   case find (== proposedVersion) localVersions of
-       Nothing      => pure $ Left "Idris 2 version \{show proposedVersion} is not installed.\nInstalled versions: \{show localVersions}."
+       Nothing      => pure $ Left "Idris 2 version \{show proposedVersion} is not installed.\nInstalled versions: \{show $ sort localVersions}."
        Just version => do
          Right () <- unselect
            | Left err => pure $ Left err
@@ -64,6 +66,16 @@ selectVersion proposedVersion = do
          True <- symlink installed linked
            | False => pure $ Left "Failed to create symlink for Idris 2 version \{show version}."
          pure $ Right ()
+
+export
+getSelectedVersion : HasIO io => io (Maybe Version)
+getSelectedVersion = do
+  Just symPath <- pathExpansion idrisSymlinkedPath
+    | Nothing => pure Nothing
+  True <- exists symPath
+    | False => pure Nothing
+  out <- readLines (limit 1) True "\{symPath} --version"
+  pure $ head' out >>= parseSpokenVersion
 
 -- TODO: write function that temporarily switches versions for 1 io operation.
 -- ||| Use the given version for an operation and then switch back.

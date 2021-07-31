@@ -3,6 +3,7 @@ module Data.Version
 import Data.List
 import Data.List1
 import Data.String
+import Data.String.Extra
 import Data.Vect
 
 public export
@@ -35,6 +36,7 @@ Ord Version where
 version : (tag : String) -> Vect 3 Nat -> Version
 version tag [x, y, z] = V x y z tag
 
+||| Parse a semantic version string.
 export
 parseVersion : String -> Maybe Version
 parseVersion str = do
@@ -50,6 +52,15 @@ parseVersion str = do
            then xs
            else str
 
+||| Parse the version as printed out by `idris2 --verison`.
+|||
+||| Important that this will return Nothing for pre-release
+||| versions which can be spotted by the commmit hash following
+||| the previous semantic version (0.4.0-b03395deb).
+export
+parseSpokenVersion : String -> Maybe Version
+parseSpokenVersion = parseVersion . drop (length "Idris 2, version ")
+
 ||| Take two version lists and zip them up post-sorting
 ||| such that versions exist to the left or right only
 ||| if the given version was in the first or second list
@@ -62,7 +73,10 @@ export
 zipMatch : List Version -> List Version -> List (Maybe Version, Maybe Version)
 zipMatch xs ys = go (sort xs) (sort ys) []
   where
-    go : List Version -> List Version -> (acc : List (Maybe Version, Maybe Version)) -> List (Maybe Version, Maybe Version)
+    go : List Version 
+      -> List Version 
+      -> (acc : List (Maybe Version, Maybe Version)) 
+      -> List (Maybe Version, Maybe Version)
     go [] [] acc = acc
     go [] (y :: ys) acc = go [] ys $ (Nothing, Just y) :: acc
     go (x :: xs) [] acc = go xs [] $ (Just x, Nothing) :: acc
