@@ -9,7 +9,7 @@ authors = "Mathew Polzin"
 -- sourceloc =
 -- bugtracker =
 
-depends = contrib
+depends = contrib, collie
 
 modules = Main
 

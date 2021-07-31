@@ -1,5 +1,6 @@
 
 /build
+/depends
 *.swp
 *.idr~
 src/IdrvPaths/Generated.idr

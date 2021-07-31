@@ -12,6 +12,8 @@ import System.File
 import System.File.Extra
 import System.Path
 
+import Collie
+
 import Git
 import Installed
 import IdvPaths
@@ -101,7 +103,7 @@ checkoutIfAvailable version = do
           inDir relativeCheckoutPath $ do
             updateMainBranch
             availableVersions <- listVersions
-            case find (== version) availableVersions of
+            case List.find (== version) availableVersions of
                  Nothing => pure $ Left "Version \{show version} is not one of the available versions: \{show availableVersions}."
                  (Just resolvedVersion) => do 
                    True <- checkout resolvedVersion.tag
