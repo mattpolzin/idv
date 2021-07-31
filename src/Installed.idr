@@ -1,4 +1,7 @@
-module Local
+||| Functions for working with installed Idris 2 versions.
+||| These are the things found in the ./versions directory
+||| under the Idv install.
+module Installed
 
 import Data.Either
 import Data.List
@@ -77,9 +80,19 @@ getSelectedVersion = do
   out <- readLines (limit 1) True "\{symPath} --version"
   pure $ head' out >>= parseSpokenVersion
 
--- TODO: write function that temporarily switches versions for 1 io operation.
--- ||| Use the given version for an operation and then switch back.
--- export
--- withVersion : HasIO io => Version -> io (Either String a) -> io (Either String a)
--- withVersion version op = ?withVersion_rhs
+||| Use the given version for an operation and then switch back.
+export
+withVersion : HasIO io => Version -> io (Either String a) -> io (Either String a)
+withVersion version op = do
+  previousVersion <- getSelectedVersion
+  Right () <- selectVersion version
+    | Left err => pure $ Left err
+  res <- op
+  Right () <- undoSelect previousVersion
+    | Left err => pure $ Left err
+  pure res
+    where
+      undoSelect : (previous : Maybe Version) -> io (Either String ())
+      undoSelect Nothing  = unselect
+      undoSelect (Just v) = selectVersion version
 

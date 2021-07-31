@@ -13,7 +13,7 @@ import System.File.Extra
 import System.Path
 
 import Git
-import Local
+import Installed
 import IdvPaths
 
 exitError : HasIO io => String -> io a
@@ -213,14 +213,14 @@ listVersionsCommand = do
     | False => exitError "Failed to clone Idris2 repository into local folder."
   Just remoteVersions <- inDir relativeCheckoutPath fetchAndListVersions
     | Nothing => exitError "Failed to retrieve remote versions."
-  Just localVersions <- Local.listVersions
+  Just installedVersions <- Installed.listVersions
     | Nothing => exitError "Failed to list local versions."
   systemInstall <- systemIdrisPath
   selectedVersion <- getSelectedVersion
   let selected = buildSelectedFn selectedVersion
   when (isJust systemInstall) $
     putStrLn $ (if selectedVersion == Nothing then "* " else "  ") ++ "system (installed)"
-  traverse_ putStrLn $ printVersion . selected <$> zipMatch localVersions remoteVersions
+  traverse_ putStrLn $ printVersion . selected <$> zipMatch installedVersions remoteVersions
     where
       printVersion : (Bool, Maybe Version, Maybe Version) -> String
       printVersion (sel, Just v, Just _)  = (if sel then "* " else "  ") ++ "\{show v}  (installed)"
