@@ -19,6 +19,8 @@ import Git
 import IdvPaths
 import Installed
 
+%hide Collie.(.handleWith)
+
 exitError : HasIO io => String -> io a
 exitError err = do
   putStrLn ""
@@ -236,13 +238,18 @@ listVersionsCommand = do
                      -> (Bool, Maybe Version, Maybe Version)
       buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
 
-installCommand : HasIO io => (versionStr : String) -> (cleanAfter : Bool) -> io ()
-installCommand versionStr cleanAfter =
-  case parseVersion versionStr of
-       Nothing      => exitError "Could not parse \{versionStr} as a version."
-       Just version => do
-         createVersionsDir version
-         buildAndInstall version cleanAfter
+-- installCommand : HasIO io => (versionStr : String) -> (cleanAfter : Bool) -> io ()
+-- installCommand versionStr cleanAfter =
+--   case parseVersion versionStr of
+--        Nothing      => exitError "Could not parse \{versionStr} as a version."
+--        Just version => do
+--          createVersionsDir version
+--          buildAndInstall version cleanAfter
+
+installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
+installCommand version cleanAfter = do
+  createVersionsDir version
+  buildAndInstall version cleanAfter
 
 selectCommand : HasIO io => (versionStr : String) -> io ()
 selectCommand versionStr = do
@@ -268,58 +275,87 @@ selectSystemCommand = do
   pure ()
 
 -- TODO: integrate https://github.com/ohad/collie instead of the following thrown together stuff
-||| Handle a subcommand and return True if the input has
-||| been handled or False if no action has been taken based
-||| on the input.
-handleSubcommand : HasIO io => List String -> io Bool
-handleSubcommand ["list"] = do
-  listVersionsCommand
-  pure True
-handleSubcommand ("list" :: more) = do
-  putStrLn "Unknown arguments to list command: \{unwords more}."
-  listVersionsCommand
-  pure True
-handleSubcommand ["install", version] = do
-  installCommand version True
-  pure True
-handleSubcommand ["install", version, "--api"] = do
-  -- we won't reinstall if not needed:
-  unless !(selectAndCheckout version) $ do
-    installCommand version False
-    selectCommand version
-  ignore $ inDir relativeCheckoutPath installApi
-  pure True
-handleSubcommand ("install" :: more) = do
-  if length more == 0
-     then putStrLn "Install command expects a <version> argument."
-     else putStrLn "Bad arguments to install command: \{unwords more}."
-  pure True
-handleSubcommand ["select", "system"] = do
-  selectSystemCommand
-  exitSuccess "System copy of Idris 2 selected."
-handleSubcommand ["select", version] = do
-  selectCommand version
-  exitSuccess "Idris 2 version \{version} selected."
-handleSubcommand ("select" :: more) = do
-  if length more == 0
-     then putStrLn "Select command expects a <version> argument."
-     else putStrLn "Bad arguments to select command: \{unwords more}."
-  pure True
-handleSubcommand _ = pure False
+-- ||| Handle a subcommand and return True if the input has
+-- ||| been handled or False if no action has been taken based
+-- ||| on the input.
+-- handleSubcommand : HasIO io => List String -> io Bool
+-- handleSubcommand ["list"] = do
+--   listVersionsCommand
+--   pure True
+-- handleSubcommand ("list" :: more) = do
+--   putStrLn "Unknown arguments to list command: \{unwords more}."
+--   listVersionsCommand
+--   pure True
+-- handleSubcommand ["install", version] = do
+--   installCommand version True
+--   pure True
+-- handleSubcommand ["install", version, "--api"] = do
+--   -- we won't reinstall if not needed:
+--   unless !(selectAndCheckout version) $ do
+--     installCommand version False
+--     selectCommand version
+--   ignore $ inDir relativeCheckoutPath installApi
+--   pure True
+-- handleSubcommand ("install" :: more) = do
+--   if length more == 0
+--      then putStrLn "Install command expects a <version> argument."
+--      else putStrLn "Bad arguments to install command: \{unwords more}."
+--   pure True
+-- handleSubcommand ["select", "system"] = do
+--   selectSystemCommand
+--   exitSuccess "System copy of Idris 2 selected."
+-- handleSubcommand ["select", version] = do
+--   selectCommand version
+--   exitSuccess "Idris 2 version \{version} selected."
+-- handleSubcommand ("select" :: more) = do
+--   if length more == 0
+--      then putStrLn "Select command expects a <version> argument."
+--      else putStrLn "Bad arguments to select command: \{unwords more}."
+--   pure True
+-- handleSubcommand _ = pure False
 
 --
 -- Entrypoint
 --
 
-handleCommand' : HasIO io => ParsedIdvCommand -> io ()
-handleCommand' x = exitSuccess "tmp"
+
+-- main : IO ()
+-- main = do
+--   Right parsedCmd <- idvCommand.parseArgs
+--     | Left err => do putStrLn "Error: \{err}"
+--                      exitError idvCommand.usage
+--   Just _ <- inDir idvLocation $ handleCommand' parsedCmd
+--     | Nothing => exitError "Could not access \{idvLocation}."
+--   pure ()
+
+handleCommand' : Command.idv ~~> IO ()
+handleCommand' =
+  [ const $ do putStrLn "Expected a subcommand."
+               exitError idv.usage
+  , "--help"  ::= [ const . exitSuccess $ idv.usage ]
+  , "list"    ::= [ const listVersionsCommand ]
+  , "install" ::= [ (\args => case args.arguments of
+                                   Nothing      => exitError "Version argument required."
+                                   Just version => if args.modifiers.project "--api"
+                                                        then installCommand version True
+                                                        else installCommand version True
+                    ) ]
+--   , "select"  ::= ?h4
+  ]
+--      [ (\args => let files = fromMaybe Prelude.Nil args.arguments in
+--                   putStrLn "Received the files: \{show files}")
+--      , "right" ::= [ const $ putStrLn "Took a right turn"
+--                    , "left"  ::= [ const $ putStrLn "Back to the start (rl)" ]
+--                    , "right" ::= [ const $ putStrLn "Half turn, rightwise" ]
+--                    ]
+--      , "left"  ::= [ const $ putStrLn "Took a left turn"
+--                    , "right" ::= [ const $ putStrLn "Back to the start (lr)" ]
+--                    , "left"  ::= [ const $ putStrLn "Half turn, leftwise" ]
+--                    ]
+--      ]
 
 main : IO ()
 main = do
-  Right parsedCmd <- idvCommand.withArgs
-    | Left err => putStrLn "Error: \{err}"
-  Just _ <- inDir idvLocation $ handleCommand' parsedCmd
+  Just _ <- inDir idvLocation $ idv.handleWith handleCommand'
     | Nothing => exitError "Could not access \{idvLocation}."
-  putStrLn ""
-
-
+  pure ()

@@ -5,16 +5,18 @@ import Collie.Options.Domain
 
 import Data.Version
 
+-- TODO: can we not public export this and the version parser once things are compiling elsewher?
+public export
 orError : (err : String) -> Maybe a -> EitherT String Identity a
 orError err = maybe (left err) right
 
 public export
 version : Arguments
-version = MkArguments (Some Version) (orError "Expected a semantic version" . parseVersion)
+version = MkArguments (Some Version) (orError "Expected a semantic version argument." . parseVersion)
 
 public export
-idvCommand : Command "idv"
-idvCommand = MkCommand
+idv : Command "idv"
+idv = MkCommand
   { description = """
                   An Idris 2 version manager. Facilitates simultaneous installation of multiple \
                   Idris 2 versions.
@@ -23,7 +25,7 @@ idvCommand = MkCommand
      [ "--help"  ::= basic "Print this help text." none
      , "list"    ::= basic "List all installed and available Idris 2 versions." none
      , "install" ::= installCommand
-     , "select"  ::= selectCommand
+--      , "select"  ::= selectCommand
      ]
   , modifiers = []
   , arguments = none
@@ -32,7 +34,7 @@ idvCommand = MkCommand
     installCommand : Command "install"
     installCommand = MkCommand
       { name = "install"
-      , description = "Install the given Idris 2 version and optionally also install the Idris 2 API."
+      , description = "<version> Install the given Idris 2 version and optionally also install the Idris 2 API."
       , subcommands = []
       , modifiers = [
             "--api" ::= (flag $ """
@@ -47,7 +49,7 @@ idvCommand = MkCommand
     selectCommand : Command "select"
     selectCommand = MkCommand
       { name = "select"
-      , description = "Select the given (already installed) version of Idris 2."
+      , description = "<version> Select the given (already installed) version of Idris 2."
       , subcommands = 
         [ "system" ::= basic "Select the system install of Idris 2 (generally ~/.idris2/bin/idris2)." none ]
       , modifiers = []
@@ -55,6 +57,13 @@ idvCommand = MkCommand
       }
 
 public export
-ParsedIdvCommand : Type
-ParsedIdvCommand = ParseTree id Maybe idvCommand
+(.handleWith) : {nm : String} -> (cmd : Command nm) -> (cmd ~~> IO a) -> IO a
+cmd .handleWith h
+  = do Right args <- cmd.parseArgs
+         | Left err => do putStrLn err
+                          putStrLn ""
+                          putStrLn (cmd .usage)
+                          putStrLn ""
+                          exitFailure
+       handle args h
 
