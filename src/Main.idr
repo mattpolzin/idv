@@ -14,9 +14,10 @@ import System.Path
 
 import Collie
 
+import Command
 import Git
-import Installed
 import IdvPaths
+import Installed
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -310,28 +311,15 @@ handleSubcommand _ = pure False
 -- Entrypoint
 --
 
-run : IO ()
-run = do
-  args <- drop 1 <$> getArgs
-  False <- handleSubcommand args
-    | True => pure ()
-  if length args /= 0
-     then putStrLn "Unknown subcommand: \{unwords args}"
-     else putStrLn "Expected a subcommand."
-  putStrLn """ 
-  \nUsage: idv <subcommand>
-
-    Subcommands:
-     - list                      list all installed and available Idris 2 versions.
-     - install <version> [--api] install the given Idris 2 version and optionally also install the Idris2 API.
-     - select <version>          select the given (already installed) Idris 2 version.
-     - select system             select the system Idris 2 install (generally ~/.idris2/bin/idris2).
-  """
-  pure ()
+handleCommand' : HasIO io => ParsedIdvCommand -> io ()
+handleCommand' x = exitSuccess "tmp"
 
 main : IO ()
 main = do
-  Just _ <- inDir idvLocation run
+  Right parsedCmd <- idvCommand.withArgs
+    | Left err => putStrLn "Error: \{err}"
+  Just _ <- inDir idvLocation $ handleCommand' parsedCmd
     | Nothing => exitError "Could not access \{idvLocation}."
-  pure ()
+  putStrLn ""
+
 
