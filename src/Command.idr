@@ -25,7 +25,7 @@ idv = MkCommand
      [ "--help"  ::= basic "Print this help text." none
      , "list"    ::= basic "List all installed and available Idris 2 versions." none
      , "install" ::= installCommand
---      , "select"  ::= selectCommand
+     , "select"  ::= selectCommand
      ]
   , modifiers = []
   , arguments = none

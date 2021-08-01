@@ -198,16 +198,14 @@ installApi = do
 ||| Select the given version if it is installed (as in set it as the version used
 ||| when the `idris2` command is executed). Then checkout that same version in the
 ||| checkout folder where builds are performed.
-selectAndCheckout : HasIO io => (versionStr : String) -> io Bool
-selectAndCheckout version =
-  case parseVersion version of
-       Nothing => pure False
-       Just parsedVersion => do
-         Right _ <- selectVersion parsedVersion
-           | Left _  => pure False
-         Right _ <- checkoutIfAvailable parsedVersion
-           | Left _ => pure False
-         pure True
+selectAndCheckout : HasIO io => (version : Version) -> io Bool
+selectAndCheckout version = do
+  Right _ <- selectVersion parsedVersion
+    | Left _  => pure False
+  Right _ <- checkoutIfAvailable parsedVersion
+    | Left _ => pure False
+  pure True
+
 --
 -- Commands
 --
@@ -238,28 +236,26 @@ listVersionsCommand = do
                      -> (Bool, Maybe Version, Maybe Version)
       buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
 
--- installCommand : HasIO io => (versionStr : String) -> (cleanAfter : Bool) -> io ()
--- installCommand versionStr cleanAfter =
---   case parseVersion versionStr of
---        Nothing      => exitError "Could not parse \{versionStr} as a version."
---        Just version => do
---          createVersionsDir version
---          buildAndInstall version cleanAfter
-
 installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
 installCommand version cleanAfter = do
   createVersionsDir version
   buildAndInstall version cleanAfter
 
-selectCommand : HasIO io => (versionStr : String) -> io ()
-selectCommand versionStr = do
-  let parsedVersion = parseVersion versionStr
-  case parsedVersion of
-       Nothing      => exitError "Could not parse \{versionStr} as a version."
-       Just version => do
-         Right () <- selectVersion version
-           | Left err => exitError err
-         pure ()
+selectCommand : HasIO io => (version : Version) -> io ()
+selectCommand version = do
+  Right () <- selectVersion version
+    | Left err => exitError err
+  pure ()
+         
+||| Install the Idris 2 API (and the related version of Idris, if needed).
+installAPICommand : HasIO io => (version : Version) -> io ()
+installAPICommand version = do 
+  -- we won't reinstall Idris 2 if not needed:
+  unless !(selectAndCheckout version) $ do
+    installCommand version False
+    selectCommand version
+  ignore $ inDir relativeCheckoutPath installApi
+  pure ()
 
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
@@ -274,59 +270,10 @@ selectSystemCommand = do
     | False => exitError "Failed to create symlink for Idris 2 system install."
   pure ()
 
--- TODO: integrate https://github.com/ohad/collie instead of the following thrown together stuff
--- ||| Handle a subcommand and return True if the input has
--- ||| been handled or False if no action has been taken based
--- ||| on the input.
--- handleSubcommand : HasIO io => List String -> io Bool
--- handleSubcommand ["list"] = do
---   listVersionsCommand
---   pure True
--- handleSubcommand ("list" :: more) = do
---   putStrLn "Unknown arguments to list command: \{unwords more}."
---   listVersionsCommand
---   pure True
--- handleSubcommand ["install", version] = do
---   installCommand version True
---   pure True
--- handleSubcommand ["install", version, "--api"] = do
---   -- we won't reinstall if not needed:
---   unless !(selectAndCheckout version) $ do
---     installCommand version False
---     selectCommand version
---   ignore $ inDir relativeCheckoutPath installApi
---   pure True
--- handleSubcommand ("install" :: more) = do
---   if length more == 0
---      then putStrLn "Install command expects a <version> argument."
---      else putStrLn "Bad arguments to install command: \{unwords more}."
---   pure True
--- handleSubcommand ["select", "system"] = do
---   selectSystemCommand
---   exitSuccess "System copy of Idris 2 selected."
--- handleSubcommand ["select", version] = do
---   selectCommand version
---   exitSuccess "Idris 2 version \{version} selected."
--- handleSubcommand ("select" :: more) = do
---   if length more == 0
---      then putStrLn "Select command expects a <version> argument."
---      else putStrLn "Bad arguments to select command: \{unwords more}."
---   pure True
--- handleSubcommand _ = pure False
 
 --
 -- Entrypoint
 --
-
-
--- main : IO ()
--- main = do
---   Right parsedCmd <- idvCommand.parseArgs
---     | Left err => do putStrLn "Error: \{err}"
---                      exitError idvCommand.usage
---   Just _ <- inDir idvLocation $ handleCommand' parsedCmd
---     | Nothing => exitError "Could not access \{idvLocation}."
---   pure ()
 
 handleCommand' : Command.idv ~~> IO ()
 handleCommand' =
@@ -337,25 +284,20 @@ handleCommand' =
   , "install" ::= [ (\args => case args.arguments of
                                    Nothing      => exitError "Version argument required."
                                    Just version => if args.modifiers.project "--api"
-                                                        then installCommand version True
+                                                        then installAPICommand version
                                                         else installCommand version True
                     ) ]
---   , "select"  ::= ?h4
+  , "select"  ::= [ (\args => case args.arguments of 
+                                   Nothing      => exitError "Version argument required."
+                                   Just version => selectCommand version )
+                  , "system" ::= [ const selectSystemCommand ]
+                  ]
   ]
---      [ (\args => let files = fromMaybe Prelude.Nil args.arguments in
---                   putStrLn "Received the files: \{show files}")
---      , "right" ::= [ const $ putStrLn "Took a right turn"
---                    , "left"  ::= [ const $ putStrLn "Back to the start (rl)" ]
---                    , "right" ::= [ const $ putStrLn "Half turn, rightwise" ]
---                    ]
---      , "left"  ::= [ const $ putStrLn "Took a left turn"
---                    , "right" ::= [ const $ putStrLn "Back to the start (lr)" ]
---                    , "left"  ::= [ const $ putStrLn "Half turn, leftwise" ]
---                    ]
---      ]
+
 
 main : IO ()
 main = do
   Just _ <- inDir idvLocation $ idv.handleWith handleCommand'
     | Nothing => exitError "Could not access \{idvLocation}."
   pure ()
+
