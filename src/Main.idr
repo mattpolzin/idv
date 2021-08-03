@@ -200,9 +200,9 @@ installApi = do
 ||| checkout folder where builds are performed.
 selectAndCheckout : HasIO io => (version : Version) -> io Bool
 selectAndCheckout version = do
-  Right _ <- selectVersion parsedVersion
+  Right _ <- selectVersion version
     | Left _  => pure False
-  Right _ <- checkoutIfAvailable parsedVersion
+  Right _ <- checkoutIfAvailable version
     | Left _ => pure False
   pure True
 
