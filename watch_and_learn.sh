@@ -12,7 +12,7 @@ function watch() {
 }
 
 function learn() {
-  build_out="$(idris2 --build *.ipkg)"
+  build_out="$(idris2 --build idv-backend.ipkg)"
   status="$?"
   clear
   if [[ "$status" == "0" ]]; then

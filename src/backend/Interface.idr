@@ -1,4 +1,4 @@
-module Main
+module Interface
 
 import Data.List
 import Data.Maybe
@@ -12,14 +12,9 @@ import System.File
 import System.File.Extra
 import System.Path
 
-import Collie
-
-import Command
 import Git
-import IdvPaths
+import public IdvPaths
 import Installed
-
-%hide Collie.(.handleWith)
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -210,6 +205,7 @@ selectAndCheckout version = do
 -- Commands
 --
 
+export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
   True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
@@ -236,11 +232,13 @@ listVersionsCommand = do
                      -> (Bool, Maybe Version, Maybe Version)
       buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
 
+export
 installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
 installCommand version cleanAfter = do
   createVersionsDir version
   buildAndInstall version cleanAfter
 
+export
 selectCommand : HasIO io => (version : Version) -> io ()
 selectCommand version = do
   Right () <- selectVersion version
@@ -248,6 +246,7 @@ selectCommand version = do
   exitSuccess "Idris 2 version \{show version} selected."
 
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
+export
 installAPICommand : HasIO io => (version : Version) -> io ()
 installAPICommand version = do 
   -- we won't reinstall Idris 2 if not needed:
@@ -257,6 +256,7 @@ installAPICommand version = do
   ignore $ inDir relativeCheckoutPath installApi
   pure ()
 
+export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
   Right () <- unselect
@@ -269,35 +269,4 @@ selectSystemCommand = do
   True <- symlink installed linked
     | False => exitError "Failed to create symlink for Idris 2 system install."
   exitSuccess "System copy of Idris 2 selected."
-
-
---
--- Entrypoint
---
-
-handleCommand' : Command.idv ~~> IO ()
-handleCommand' =
-  [ const $ do putStrLn "Expected a subcommand."
-               exitError idv.usage
-  , "install" ::= [ (\args => case args.arguments of
-                                   Nothing      => exitError "Version argument required."
-                                   Just version => if args.modifiers.project "--api"
-                                                        then installAPICommand version
-                                                        else installCommand version True
-                    ) ]
-  , "select"  ::= [ (\args => case args.arguments of 
-                                   Nothing      => exitError "Version argument required."
-                                   Just version => selectCommand version )
-                  , "system" ::= [ const selectSystemCommand ]
-                  ]
-  , "--help"  ::= [ const . exitSuccess $ idv.usage ]
-  , "list"    ::= [ const listVersionsCommand ]
-  ]
-
-
-main : IO ()
-main = do
-  Just _ <- inDir idvLocation $ idv.handleWith handleCommand'
-    | Nothing => exitError "Could not access \{idvLocation}."
-  pure ()
 

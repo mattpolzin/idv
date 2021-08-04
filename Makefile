@@ -8,7 +8,7 @@ CHECKOUTDIR = $(INSTALLDIR)/checkout
 
 all: build
 
-.PHONY: build install clean deps build-idv
+.PHONY: build install clean deps build-idv build-backend
 
 depends/collie-0:
 	@mkdir -p depends/collie-0 && \
@@ -23,11 +23,20 @@ depends/collie-0:
 	cd ../.. && \
 	rm -rf ./deps-build/collie
 
-deps: depends/collie-0
+depends/idv-backend-0:
+	@mkdir -p depends/idv-backend-0 && \
+	rm -rf ./build && \
+	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
+	idris2 --build idv-backend.ipkg
+	@cp -R ./build/ttc/* ./depends/idv-backend-0 && \
+	rm -rf ./build
+
+deps: depends/collie-0 depends/idv-backend-0
 
 build-idv: 
-	@INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
 	idris2 --build idv.ipkg
+
+build-backend: depends/idv-backend-0
 
 build: deps build-idv
 
