@@ -245,8 +245,8 @@ selectCommand : HasIO io => (version : Version) -> io ()
 selectCommand version = do
   Right () <- selectVersion version
     | Left err => exitError err
-  pure ()
-         
+  exitSuccess "Idris 2 version \{show version} selected."
+
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 installAPICommand : HasIO io => (version : Version) -> io ()
 installAPICommand version = do 
@@ -268,7 +268,7 @@ selectSystemCommand = do
     | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
   True <- symlink installed linked
     | False => exitError "Failed to create symlink for Idris 2 system install."
-  pure ()
+  exitSuccess "System copy of Idris 2 selected."
 
 
 --
@@ -279,8 +279,6 @@ handleCommand' : Command.idv ~~> IO ()
 handleCommand' =
   [ const $ do putStrLn "Expected a subcommand."
                exitError idv.usage
-  , "--help"  ::= [ const . exitSuccess $ idv.usage ]
-  , "list"    ::= [ const listVersionsCommand ]
   , "install" ::= [ (\args => case args.arguments of
                                    Nothing      => exitError "Version argument required."
                                    Just version => if args.modifiers.project "--api"
@@ -292,6 +290,8 @@ handleCommand' =
                                    Just version => selectCommand version )
                   , "system" ::= [ const selectSystemCommand ]
                   ]
+  , "--help"  ::= [ const . exitSuccess $ idv.usage ]
+  , "list"    ::= [ const listVersionsCommand ]
   ]
 
 
