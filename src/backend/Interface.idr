@@ -2,15 +2,12 @@ module Interface
 
 import Data.List
 import Data.Maybe
-import Data.Either
-import Data.String
 import Data.Version
 import System
 import System.Console.Extra
 import System.Directory.Extra
 import System.File
 import System.File.Extra
-import System.Path
 
 import Git
 import public IdvPaths
