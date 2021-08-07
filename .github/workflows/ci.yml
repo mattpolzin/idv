@@ -12,7 +12,7 @@ jobs:
         run: apt-get -y install git
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build Idv
+      - name: Build & Install Idv
         run: make && make install
         #      - name: Test Idv
         #        run: |
