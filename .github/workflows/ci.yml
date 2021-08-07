@@ -1,0 +1,18 @@
+
+name: Idv tests
+on: push
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    container: mattpolzin2/idris-docker:nightly
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build Idv
+        run: make && make install
+        #      - name: Test Idv
+        #        run: |
+        #          make test INTERACTIVE=''
+
