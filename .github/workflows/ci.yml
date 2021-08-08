@@ -15,7 +15,7 @@ jobs:
       - name: Build & Install Idv
         run: make && make install
       - name: Install Idris 0.4.0 via Idv
-        run: idv install 0.4.0
+        run: ~/.idv/bin/idv install 0.4.0
       - name: Test Idv
         run: make test INTERACTIVE_TESTS=''
 
