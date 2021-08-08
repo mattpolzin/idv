@@ -1,0 +1,4 @@
+rm -rf build
+
+$1 select 0.4.0
+

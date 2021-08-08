@@ -6,9 +6,11 @@ EXECDIR = $(INSTALLDIR)/bin
 IDRISVERSIONDIR = $(INSTALLDIR)/versions
 CHECKOUTDIR = $(INSTALLDIR)/checkout
 
+INTERACTIVE_TESTS ?= --interactive
+
 all: build
 
-.PHONY: build install clean deps build-idv
+.PHONY: build install test clean deps build-idv
 
 depends/collie-0:
 	@mkdir -p depends/collie-0 && \
@@ -41,3 +43,15 @@ install:
 clean:
 	rm -rf ./depends
 	rm -rf ./build
+	rm -rf ./tests/build
+	rm -rf ./tests/.idv/bin
+
+tests/.idv/bin/idv:
+	make
+	INSTALLDIR=./tests/.idv make install
+
+test: tests/.idv/bin/idv
+	cd tests && \
+	idris2 --build tests.ipkg && \
+	./build/exec/test_idv ../.idv/bin/idv $(INTERACTIVE_TESTS)
+
