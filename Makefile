@@ -9,6 +9,7 @@ IDRISVERSIONDIR = $(INSTALLDIR)/versions
 CHECKOUTDIR = $(INSTALLDIR)/checkout
 
 INTERACTIVE_TESTS ?= --interactive
+TEST_INSTALLDIR ?= $(CWD)/tests/.idv
 
 all: build
 
@@ -52,12 +53,12 @@ clean: clean-tests
 	rm -rf ./build
 
 tests/.idv/bin/idv:
-	INSTALLDIR=$(CWD)/tests/.idv make
-	INSTALLDIR=$(CWD)/tests/.idv make install
+	INSTALLDIR=$(TEST_INSTALLDIR) make
+	INSTALLDIR=$(TEST_INSTALLDIR) make install
 
 test: clean-tests tests/.idv/bin/idv
 	cd tests && \
-	./.idv/bin/idv install 0.2.1 && \
+	$(TEST_INSTALLDIR)/bin/idv install 0.2.1 && \
 	idris2 --build tests.ipkg && \
-	./build/exec/test_idv ../.idv/bin/idv $(INTERACTIVE_TESTS)
+	./build/exec/test_idv $(TEST_INSTALLDIR)/bin/idv $(INTERACTIVE_TESTS)
 
