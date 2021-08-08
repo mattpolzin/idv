@@ -4,13 +4,14 @@ import Data.List
 import Data.Version
 import System.Console.Extra
 import System.Directory.Extra
+import Data.String
 
 ||| Check if there is a repo in the current working directory.
 repoExists : HasIO io => io Bool
 repoExists = do
-  True <- eatOutput True "git status"
+  [gitRemote] <- readLines (limit 1) True "git config --get remote.origin.url" -- "git status"
     | _ => pure False
-  pure True
+  pure $ isSuffixOf "Idris2.git" $ trim gitRemote
 
 clone : HasIO io => (repoURL : String) -> (path : String) -> io Bool
 clone repoURL path = eatOutput False "git clone '\{repoURL}' '\{path}'"

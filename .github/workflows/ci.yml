@@ -15,5 +15,5 @@ jobs:
       - name: Build & Install Idv
         run: make && make install
       - name: Test Idv
-        run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv make test
+        run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
 
