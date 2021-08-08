@@ -14,8 +14,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Build & Install Idv
         run: make && make install
-      - name: Install Idris 0.4.0 via Idv
-        run: ~/.idv/bin/idv install 0.4.0
+      - name: Install Idris 0.2.1 via Idv
+        run: ~/.idv/bin/idv install 0.2.1
       - name: Test Idv
         run: make test INTERACTIVE_TESTS=''
 
