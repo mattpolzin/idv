@@ -1,4 +1,6 @@
 
+CWD = $(shell pwd)
+
 INSTALLDIR ?= ~/.idv
 IDRIS2 ?= ~/.idris2/bin/idris2
 
@@ -40,17 +42,19 @@ install:
 	echo "\nIdv installed to $(INSTALLDIR).\nThis is not automatically in your PATH.\nAdd $(EXECDIR) to your PATH to complete installation.\n"
 	@echo "\nTIP: Add Idv to your path before Idris's install location\nso that Idv can non-destructively point your shell at\ndifferent Idris versions.\n"
 
-clean:
-	rm -rf ./depends
-	rm -rf ./build
+clean-tests:
 	rm -rf ./tests/build
 	rm -rf ./tests/.idv/bin
 
-tests/.idv/bin/idv:
-	make
-	INSTALLDIR=./tests/.idv make install
+clean: clean-tests
+	rm -rf ./depends
+	rm -rf ./build
 
-test: tests/.idv/bin/idv
+tests/.idv/bin/idv:
+	INSTALLDIR=$(CWD)/tests/.idv make
+	INSTALLDIR=$(CWD)/tests/.idv make install
+
+test: clean-tests tests/.idv/bin/idv
 	cd tests && \
 	idris2 --build tests.ipkg && \
 	./build/exec/test_idv ../.idv/bin/idv $(INTERACTIVE_TESTS)
