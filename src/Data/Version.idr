@@ -10,39 +10,44 @@ public export
 record Version where
   constructor V
   major, minor, patch : Nat
+  ||| If the version is pre-release, the part of the version string following
+  ||| a dash (e.g. 'alpha.1' in 0.1.0-alpha.1).
+  prereleaseIdentifier : Maybe String
+  ||| The full tag of the version. In the context of git this is exactly the
+  ||| git tag. Elsewhere this field might hold other meaning.
   tag : String
 
 %name Version version
 
 export
 Show Version where
-  show (V major minor patch _) = "\{show major}.\{show minor}.\{show patch}"
+  show (V major minor patch Nothing _) = "\{show major}.\{show minor}.\{show patch}"
+  show (V major minor patch (Just pre) _) = "\{show major}.\{show minor}.\{show patch}-\{pre}"
 
 export
 Eq Version where
-  (V major minor patch _) == (V k j i _) = major == k && minor == j && patch == i
+  (V major minor patch pre _) == (V i j k p _) = major == i && minor == j && patch == k && pre == p
 
 export
 Ord Version where
-  compare (V major minor patch _) (V k j i _) = 
-    case compare major k of
-         LT => LT
-         GT => GT
-         EQ => case compare minor j of
-                    LT => LT
-                    GT => GT
-                    EQ => compare patch i
+  compare (V major minor patch pre _) (V i j k p _) = case vectCompare [major, minor, patch] [i, j, k] of
+                                                           EQ    => compare pre p
+                                                           o@(_) => o
+    where
+      vectCompare : Vect 3 Nat -> Vect 3 Nat -> Ordering
+      vectCompare = compare
 
-version : (tag : String) -> Vect 3 Nat -> Version
-version tag [x, y, z] = V x y z tag
+version : (tag : String) -> (prereleaseIdentifier : Maybe String) -> Vect 3 Nat -> Version
+version tag pre [x, y, z] = V x y z pre tag
 
 ||| Parse a semantic version string.
 export
 parseVersion : String -> Maybe Version
 parseVersion str = do
-    let components = split (== '.') $ dropPrefix str
+    let (primary, prerelease) = mapSnd (drop 1) $ break (== '-') str
+    let components = split (== '.') $ dropPrefix primary
     nums <- sequence $ map parsePositive components
-    version str <$> toVect 3 (forget nums)
+    version str (nonEmpty prerelease) <$> toVect 3 (forget nums)
   where
     dropPrefix : String -> String
     dropPrefix str with (strM str)
@@ -51,6 +56,11 @@ parseVersion str = do
         if x == 'v'
            then xs
            else str
+
+    nonEmpty : String -> Maybe String
+    nonEmpty str = case strM str of
+                        StrNil        => Nothing
+                        (StrCons _ _) => Just str
 
 ||| Parse the version as printed out by `idris2 --verison`.
 |||
