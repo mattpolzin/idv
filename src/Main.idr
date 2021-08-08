@@ -43,7 +43,7 @@ systemIdrisPath = do
   checkLocation =<< defaultPath
     where
       defaultPath : io (Maybe String)
-      defaultPath = pathExpansion $ defaultIdris2Location
+      defaultPath = pathExpansion defaultIdris2Location
 
       checkLocation : Maybe String -> io (Maybe String)
       checkLocation Nothing     = pure Nothing
@@ -221,6 +221,7 @@ listVersionsCommand = do
   selectedVersion <- getSelectedVersion
   let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
   let selectedInstalled = buildSelectedFn selectedVersion
+  putStrLn "looking for system Idris at \{show !systemIdrisPath}, version \{show systemInstall}."
   whenJust systemInstall $ \systemVersion => do
     putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{show systemVersion})"
   traverse_ putStrLn $ printVersion . selectedInstalled <$> zipMatch installedVersions remoteVersions
