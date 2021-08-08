@@ -45,6 +45,7 @@ install:
 clean-tests:
 	rm -rf ./tests/build
 	rm -rf ./tests/.idv/bin
+	rm -rf ./tests/.idv/checkout
 
 clean: clean-tests
 	rm -rf ./depends
@@ -56,6 +57,7 @@ tests/.idv/bin/idv:
 
 test: clean-tests tests/.idv/bin/idv
 	cd tests && \
+	./.idv/bin/idv install 0.2.1 && \
 	idris2 --build tests.ipkg && \
 	./build/exec/test_idv ../.idv/bin/idv $(INTERACTIVE_TESTS)
 
