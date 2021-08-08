@@ -221,6 +221,7 @@ listVersionsCommand = do
   selectedVersion <- getSelectedVersion
   let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
   let selectedInstalled = buildSelectedFn selectedVersion
+  putStrLn "should find system Idris at \{defaultIdris2Location}."
   putStrLn "looking for system Idris at \{show !systemIdrisPath}, version \{show systemInstall}."
   whenJust systemInstall $ \systemVersion => do
     putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{show systemVersion})"
