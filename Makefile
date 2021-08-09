@@ -59,7 +59,10 @@ clean-tests:
 	rm -rf ./tests/.idv/bin
 	rm -rf ./tests/.idv/checkout
 
-clean: clean-tests
+clean-backend:
+	rm -rf ./depends/idv-backend-0
+
+clean: clean-tests clean-backend
 	rm -rf ./depends
 	rm -rf ./build
 	rm -rf ./backend/build

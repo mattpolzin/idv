@@ -251,7 +251,8 @@ installAPICommand version = do
   unless !(selectAndCheckout version) $ do
     installCommand version False
     selectCommand version
-  ignore $ inDir relativeCheckoutPath installApi
+  Just _ <- inDir relativeCheckoutPath installApi
+    | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   pure ()
 
 export
