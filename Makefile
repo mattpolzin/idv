@@ -74,7 +74,7 @@ tests/.idv/bin/idv:
 tests/.idv/versions/0_2_1:
 	$(TEST_INSTALLDIR)/bin/idv install 0.2.1
 
-test: clean-tests tests/.idv/bin/idv tests/.idv/versions/0_2_1
+test: clean tests/.idv/bin/idv tests/.idv/versions/0_2_1
 	cd tests && \
 	idris2 --build tests.ipkg && \
 	./build/exec/test_idv $(TEST_INSTALLDIR)/bin/idv $(INTERACTIVE_TESTS)
