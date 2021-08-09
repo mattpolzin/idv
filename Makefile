@@ -22,6 +22,7 @@ depends/collie-0:
 	rm -rf ./collie && \
 	git clone https://github.com/ohad/collie.git && \
 	cd collie && \
+	git checkout 31b2fec && \
 	make && \
 	cp -R ./build/ttc/* ../../depends/collie-0 && \
 	cd ../.. && \
