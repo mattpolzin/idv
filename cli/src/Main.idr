@@ -27,19 +27,19 @@ exitSuccess msg = do
 -- Entrypoint
 --
 
+-- Handling more complex commands (with arguemnts and modifiers) first
+-- makes compile times shorter.
 handleCommand' : Command.idv ~~> IO ()
 handleCommand' =
   [ const $ do putStrLn "Expected a subcommand."
                exitError idv.usage
-  , "install" ::= [ (\args => case args.arguments of
-                                   Nothing      => exitError "Version argument required."
-                                   Just version => if args.modifiers.project "--api"
-                                                        then installAPICommand version
-                                                        else installCommand version True
+  , "install" ::= [ (\args => let version = args.arguments
+                              in  if args.modifiers.project "--api"
+                                     then installAPICommand version
+                                     else installCommand version True
                     ) ]
-  , "select"  ::= [ (\args => case args.arguments of 
-                                   Nothing      => exitError "Version argument required."
-                                   Just version => selectCommand version )
+  , "select"  ::= [ (\args => let version = args.arguments
+                              in  selectCommand version )
                   , "system" ::= [ const selectSystemCommand ]
                   ]
   , "--help"  ::= [ const . exitSuccess $ idv.usage ]

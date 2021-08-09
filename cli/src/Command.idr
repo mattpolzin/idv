@@ -5,14 +5,12 @@ import Collie.Options.Domain
 
 import Data.Version
 
--- TODO: can we not public export this and the version parser once things are compiling elsewher?
-public export
-orError : (err : String) -> Maybe a -> EitherT String Identity a
-orError err = maybe (left err) right
+orError : (err : String) -> Maybe a -> Either String a
+orError err = maybe (Left err) Right
 
 public export
 version : Arguments
-version = MkArguments (Some Version) (orError "Expected a semantic version argument." . parseVersion)
+version = MkArguments True (Some Version) (orError "Expected a semantic version argument." . parseVersion)
 
 public export
 idv : Command "idv"
@@ -64,6 +62,9 @@ cmd .handleWith h
                           putStrLn ""
                           putStrLn (cmd .usage)
                           putStrLn ""
+                          exitFailure
+       let Right args = finalising args
+         | Left err => do putStrLn (show err)
                           exitFailure
        handle args h
 
