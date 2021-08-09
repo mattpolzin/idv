@@ -247,13 +247,20 @@ selectCommand version = do
 export
 installAPICommand : HasIO io => (version : Version) -> io ()
 installAPICommand version = do 
+  selectedVersion <- getSelectedVersion
   -- we won't reinstall Idris 2 if not needed:
   unless !(selectAndCheckout version) $ do
     installCommand version False
-    selectCommand version
+    Right () <- selectVersion version
+      | Left err => exitError err
+    pure ()
   Just _ <- inDir relativeCheckoutPath installApi
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
-  pure ()
+  -- if we know we used to have a different version of Idris selected, switch back.
+  whenJust selectedVersion $ \version => do
+    Right () <- selectVersion version
+      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{show version} with error: err"
+    pure ()
 
 export
 selectSystemCommand : HasIO io => io ()
@@ -268,4 +275,5 @@ selectSystemCommand = do
   True <- symlink installed linked
     | False => exitError "Failed to create symlink for Idris 2 system install."
   exitSuccess "System copy of Idris 2 selected."
+
 

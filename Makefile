@@ -28,7 +28,7 @@ depends/collie-0:
 	cd ../.. && \
 	rm -rf ./deps-build/collie
 
-depends/idv-backend-0:
+depends/idv-backend-0: backend/src
 	@mkdir -p depends/idv-backend-0 && \
 	rm -rf ./build && \
 	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
