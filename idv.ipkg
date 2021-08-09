@@ -17,7 +17,7 @@ main = Main
 
 executable = idv
 -- opts =
-sourcedir = "src/cli"
+sourcedir = "cli/src"
 -- builddir =
 -- outputdir =
 

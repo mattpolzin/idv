@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE=./src/backend/IdvPaths/Generated.idr
+FILE=./backend/src/IdvPaths/Generated.idr
 
 INSTALLDIR=${INSTALLDIR:-~/.idv}
 IDRIS2=${IDRIS2:-~/.idris2/bin/idris2}

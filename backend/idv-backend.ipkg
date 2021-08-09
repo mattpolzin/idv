@@ -9,5 +9,5 @@ modules = Interface
         , IdvPaths.Generated
         , System.Directory.Extra
 
-sourcedir = "src/backend"
+sourcedir = "src"
 

@@ -22,7 +22,6 @@ depends/collie-0:
 	rm -rf ./collie && \
 	git clone https://github.com/ohad/collie.git && \
 	cd collie && \
-	git checkout 53a4c2a && \
 	make && \
 	cp -R ./build/ttc/* ../../depends/collie-0 && \
 	cd ../.. && \
@@ -32,8 +31,9 @@ depends/idv-backend-0:
 	@mkdir -p depends/idv-backend-0 && \
 	rm -rf ./build && \
 	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
-	idris2 --build idv-backend.ipkg
-	@cp -R ./build/ttc/* ./depends/idv-backend-0 && \
+	cd backend && \
+	idris2 --build idv-backend.ipkg &&\
+	cp -R ./build/ttc/* ../depends/idv-backend-0 && \
 	rm -rf ./build
 
 deps: depends/collie-0 depends/idv-backend-0
@@ -61,6 +61,7 @@ clean-tests:
 clean: clean-tests
 	rm -rf ./depends
 	rm -rf ./build
+	rm -rf ./backend/build
 
 tests/.idv/bin/idv:
 	INSTALLDIR=$(TEST_INSTALLDIR) make
