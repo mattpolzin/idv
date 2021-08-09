@@ -38,7 +38,7 @@ systemIdrisPath = do
   checkLocation =<< defaultPath
     where
       defaultPath : io (Maybe String)
-      defaultPath = pathExpansion $ defaultIdris2Location
+      defaultPath = pathExpansion defaultIdris2Location
 
       checkLocation : Maybe String -> io (Maybe String)
       checkLocation Nothing     = pure Nothing
@@ -211,12 +211,13 @@ listVersionsCommand = do
     | Nothing => exitError "Failed to retrieve remote versions."
   Just installedVersions <- Installed.listVersions
     | Nothing => exitError "Failed to list local versions."
-  systemInstall <- systemIdrisPath
+  systemInstall <- let (=<<) = Prelude.(=<<) @{Monad.Compose} in getVersion =<< systemIdrisPath
   selectedVersion <- getSelectedVersion
-  let selected = buildSelectedFn selectedVersion
-  when (isJust systemInstall) $
-    putStrLn $ (if selectedVersion == Nothing then "* " else "  ") ++ "system (installed)"
-  traverse_ putStrLn $ printVersion . selected <$> zipMatch installedVersions remoteVersions
+  let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
+  let selectedInstalled = buildSelectedFn selectedVersion
+  whenJust systemInstall $ \systemVersion => do
+    putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{show systemVersion})"
+  traverse_ putStrLn $ printVersion . selectedInstalled <$> zipMatch installedVersions remoteVersions
     where
       printVersion : (Bool, Maybe Version, Maybe Version) -> String
       printVersion (sel, Just v, Just _)  = (if sel then "* " else "  ") ++ "\{show v}  (installed)"

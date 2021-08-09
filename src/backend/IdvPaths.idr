@@ -34,7 +34,8 @@ idrisSymlinkedPath =
 ||| This is the directory relative to `idvLocation`/`relativeVersionsPath`
 export
 versionDirName : Version -> String
-versionDirName (V major minor patch _) = "\{show major}_\{show minor}_\{show patch}"
+versionDirName (V major minor patch Nothing _) = "\{show major}_\{show minor}_\{show patch}"
+versionDirName (V major minor patch (Just pre) _) = "\{show major}_\{show minor}_\{show patch}-\{pre}"
 
 ||| The full path where the given version is installed.
 export

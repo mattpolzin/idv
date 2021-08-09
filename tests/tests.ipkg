@@ -1,0 +1,8 @@
+package tests
+
+modules = Main
+
+main = Main
+executable = test_idv
+
+depends = test, contrib

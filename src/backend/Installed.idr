@@ -6,6 +6,7 @@ module Installed
 import Data.Either
 import Data.List
 import Data.Version
+import Data.String
 import System.Console.Extra
 import System.Directory
 import System.Directory.Extra
@@ -70,14 +71,18 @@ selectVersion proposedVersion = do
          pure $ Right ()
 
 export
-getSelectedVersion : HasIO io => io (Maybe Version)
-getSelectedVersion = do
-  Just symPath <- pathExpansion idrisSymlinkedPath
+getVersion : HasIO io => (idrisExecPath : String) -> io (Maybe Version)
+getVersion idrisExecPath = do
+  Just symPath <- pathExpansion idrisExecPath
     | Nothing => pure Nothing
   True <- exists symPath
     | False => pure Nothing
-  out <- readLines (limit 1) True "\{symPath} --version"
+  out <- (map trim) <$> readLines (limit 1) True "\{symPath} --version"
   pure $ head' out >>= parseSpokenVersion
+
+export
+getSelectedVersion : HasIO io => io (Maybe Version)
+getSelectedVersion = getVersion idrisSymlinkedPath
 
 ||| Use the given version for an operation and then switch back.
 export
