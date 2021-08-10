@@ -1,0 +1,13 @@
+package idv-backend
+authors = "Mathew Polzin"
+
+depends = contrib
+
+modules = Interface
+        , Data.Version
+        , IdvPaths
+        , IdvPaths.Generated
+        , System.Directory.Extra
+
+sourcedir = "src"
+

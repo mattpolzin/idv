@@ -2,8 +2,8 @@ module IdvPaths
 
 import public IdvPaths.Generated
 
-import System.Path
 import Data.Version
+import System.Path
 
 export
 idrisRepoURL : String

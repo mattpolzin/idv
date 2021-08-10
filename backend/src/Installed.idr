@@ -10,7 +10,6 @@ import Data.String
 import System.Console.Extra
 import System.Directory
 import System.Directory.Extra
-import System.File
 import System.File.Extra
 import System.Path
 

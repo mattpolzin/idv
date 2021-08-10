@@ -1,22 +1,17 @@
-module Main
+module Interface
 
 import Data.List
 import Data.Maybe
-import Data.Either
-import Data.String
 import Data.Version
 import System
 import System.Console.Extra
 import System.Directory.Extra
 import System.File
 import System.File.Extra
-import System.Path
-
-import Collie
 
 import Git
+import public IdvPaths
 import Installed
-import IdvPaths
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -195,20 +190,19 @@ installApi = do
 ||| Select the given version if it is installed (as in set it as the version used
 ||| when the `idris2` command is executed). Then checkout that same version in the
 ||| checkout folder where builds are performed.
-selectAndCheckout : HasIO io => (versionStr : String) -> io Bool
-selectAndCheckout version =
-  case parseVersion version of
-       Nothing => pure False
-       Just parsedVersion => do
-         Right _ <- selectVersion parsedVersion
-           | Left _  => pure False
-         Right _ <- checkoutIfAvailable parsedVersion
-           | Left _ => pure False
-         pure True
+selectAndCheckout : HasIO io => (version : Version) -> io Bool
+selectAndCheckout version = do
+  Right _ <- selectVersion version
+    | Left _  => pure False
+  Right _ <- checkoutIfAvailable version
+    | Left _ => pure False
+  pure True
+
 --
 -- Commands
 --
 
+export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
   True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
@@ -236,24 +230,39 @@ listVersionsCommand = do
                      -> (Bool, Maybe Version, Maybe Version)
       buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
 
-installCommand : HasIO io => (versionStr : String) -> (cleanAfter : Bool) -> io ()
-installCommand versionStr cleanAfter =
-  case parseVersion versionStr of
-       Nothing      => exitError "Could not parse \{versionStr} as a version."
-       Just version => do
-         createVersionsDir version
-         buildAndInstall version cleanAfter
+export
+installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
+installCommand version cleanAfter = do
+  createVersionsDir version
+  buildAndInstall version cleanAfter
 
-selectCommand : HasIO io => (versionStr : String) -> io ()
-selectCommand versionStr = do
-  let parsedVersion = parseVersion versionStr
-  case parsedVersion of
-       Nothing      => exitError "Could not parse \{versionStr} as a version."
-       Just version => do
-         Right () <- selectVersion version
-           | Left err => exitError err
-         pure ()
+export
+selectCommand : HasIO io => (version : Version) -> io ()
+selectCommand version = do
+  Right () <- selectVersion version
+    | Left err => exitError err
+  exitSuccess "Idris 2 version \{show version} selected."
 
+||| Install the Idris 2 API (and the related version of Idris, if needed).
+export
+installAPICommand : HasIO io => (version : Version) -> io ()
+installAPICommand version = do 
+  selectedVersion <- getSelectedVersion
+  -- we won't reinstall Idris 2 if not needed:
+  unless !(selectAndCheckout version) $ do
+    installCommand version False
+    Right () <- selectVersion version
+      | Left err => exitError err
+    pure ()
+  Just _ <- inDir relativeCheckoutPath installApi
+    | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
+  -- if we know we used to have a different version of Idris selected, switch back.
+  whenJust selectedVersion $ \version => do
+    Right () <- selectVersion version
+      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{show version} with error: err"
+    pure ()
+
+export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
   Right () <- unselect
@@ -265,74 +274,6 @@ selectSystemCommand = do
     | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
   True <- symlink installed linked
     | False => exitError "Failed to create symlink for Idris 2 system install."
-  pure ()
-
--- TODO: integrate https://github.com/ohad/collie instead of the following thrown together stuff
-||| Handle a subcommand and return True if the input has
-||| been handled or False if no action has been taken based
-||| on the input.
-handleSubcommand : HasIO io => List String -> io Bool
-handleSubcommand ["list"] = do
-  listVersionsCommand
-  pure True
-handleSubcommand ("list" :: more) = do
-  putStrLn "Unknown arguments to list command: \{unwords more}."
-  listVersionsCommand
-  pure True
-handleSubcommand ["install", version] = do
-  installCommand version True
-  pure True
-handleSubcommand ["install", version, "--api"] = do
-  -- we won't reinstall if not needed:
-  unless !(selectAndCheckout version) $ do
-    installCommand version False
-    selectCommand version
-  ignore $ inDir relativeCheckoutPath installApi
-  pure True
-handleSubcommand ("install" :: more) = do
-  if length more == 0
-     then putStrLn "Install command expects a <version> argument."
-     else putStrLn "Bad arguments to install command: \{unwords more}."
-  pure True
-handleSubcommand ["select", "system"] = do
-  selectSystemCommand
   exitSuccess "System copy of Idris 2 selected."
-handleSubcommand ["select", version] = do
-  selectCommand version
-  exitSuccess "Idris 2 version \{version} selected."
-handleSubcommand ("select" :: more) = do
-  if length more == 0
-     then putStrLn "Select command expects a <version> argument."
-     else putStrLn "Bad arguments to select command: \{unwords more}."
-  pure True
-handleSubcommand _ = pure False
 
---
--- Entrypoint
---
-
-run : IO ()
-run = do
-  args <- drop 1 <$> getArgs
-  False <- handleSubcommand args
-    | True => pure ()
-  if length args /= 0
-     then putStrLn "Unknown subcommand: \{unwords args}"
-     else putStrLn "Expected a subcommand."
-  putStrLn """ 
-  \nUsage: idv <subcommand>
-
-    Subcommands:
-     - list                      list all installed and available Idris 2 versions.
-     - install <version> [--api] install the given Idris 2 version and optionally also install the Idris2 API.
-     - select <version>          select the given (already installed) Idris 2 version.
-     - select system             select the system Idris 2 install (generally ~/.idris2/bin/idris2).
-  """
-  pure ()
-
-main : IO ()
-main = do
-  Just _ <- inDir idvLocation run
-    | Nothing => exitError "Could not access \{idvLocation}."
-  pure ()
 

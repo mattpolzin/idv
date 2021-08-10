@@ -9,7 +9,7 @@ authors = "Mathew Polzin"
 -- sourceloc =
 -- bugtracker =
 
-depends = contrib, collie
+depends = contrib, collie, idv-backend
 
 modules = Main
 
@@ -17,7 +17,7 @@ main = Main
 
 executable = idv
 -- opts =
-sourcedir = "src"
+sourcedir = "cli/src"
 -- builddir =
 -- outputdir =
 
