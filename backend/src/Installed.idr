@@ -37,6 +37,17 @@ listVersions = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do
       versions : (path : String) -> io (Maybe (List Version))
       versions path = map parseFolderEntries <$> versionFolders path
 
+||| Check if the given version is installed.
+export
+isInstalled : HasIO io => Version -> io (Either String Bool)
+isInstalled version = do
+  Just localVersions <- listVersions
+    | Nothing => pure $ Left "Could not look up local versions."
+  pure $ 
+    case find (== version) localVersions of
+         Nothing      => Right False
+         Just version => Right True
+
 ||| Remove the symlink that points to the "selected" Idris 2 executable.
 export
 unselect : HasIO io => io (Either String ())
@@ -79,6 +90,11 @@ getVersion idrisExecPath = do
     | False => pure Nothing
   out <- (map trim) <$> readLines (limit 1) True "\{symPath} --version"
   pure $ head' out >>= parseSpokenVersion
+
+export
+getSystemVersion : HasIO io => io (Maybe Version)
+getSystemVersion = 
+  let (=<<) = Prelude.(=<<) @{Monad.Compose} in getVersion =<< systemIdrisPath
 
 export
 getSelectedVersion : HasIO io => io (Maybe Version)

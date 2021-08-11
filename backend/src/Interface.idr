@@ -27,23 +27,6 @@ exitSuccess msg = do
   putStrLn ""
   exitSuccess
 
-||| The install location of the system copy of Idris 2.
-||| If Idris 2 cannot be located on the system (i.e.
-||| outside of the Idv versions directory) this function
-||| returns Nothing.
-systemIdrisPath : HasIO io => io (Maybe String)
-systemIdrisPath = do
-  Nothing <- checkLocation =<< getEnv "IDRIS2"
-    | Just envOverride => pure $ Just envOverride
-  checkLocation =<< defaultPath
-    where
-      defaultPath : io (Maybe String)
-      defaultPath = pathExpansion defaultIdris2Location
-
-      checkLocation : Maybe String -> io (Maybe String)
-      checkLocation Nothing     = pure Nothing
-      checkLocation (Just path) = pure $ if !(exists path) then Just path else Nothing
-
 createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
   Just resolvedVersionsDir <- pathExpansion $ versionPath version
@@ -243,6 +226,20 @@ selectCommand version = do
     | Left err => exitError err
   exitSuccess "Idris 2 version \{show version} selected."
 
+export
+selectSystemCommand : HasIO io => io ()
+selectSystemCommand = do
+  Right () <- unselect
+    | Left err => exitError err
+  let proposedSymlinked = idrisSymlinkedPath
+  Just installed <- systemIdrisPath
+    | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
+  Just linked <- pathExpansion proposedSymlinked
+    | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
+  True <- symlink installed linked
+    | False => exitError "Failed to create symlink for Idris 2 system install."
+  exitSuccess "System copy of Idris 2 selected."
+
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 export
 installAPICommand : HasIO io => (version : Version) -> io ()
@@ -258,22 +255,10 @@ installAPICommand version = do
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
   whenJust selectedVersion $ \version => do
+    Right True <- isInstalled version
+      | Right False => selectSystemCommand
+      | Left err    => exitError err
     Right () <- selectVersion version
       | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{show version} with error: \{err}"
     pure ()
-
-export
-selectSystemCommand : HasIO io => io ()
-selectSystemCommand = do
-  Right () <- unselect
-    | Left err => exitError err
-  let proposedSymlinked = idrisSymlinkedPath
-  Just installed <- systemIdrisPath
-    | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
-  Just linked <- pathExpansion proposedSymlinked
-    | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
-  True <- symlink installed linked
-    | False => exitError "Failed to create symlink for Idris 2 system install."
-  exitSuccess "System copy of Idris 2 selected."
-
 

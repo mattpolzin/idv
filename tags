@@ -1,0 +1,176 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+"--api"	cli/src/Command.idr	/^            "--api" ::= (flag $ """$/;"	d
+(.handleWith)	cli/src/Command.idr	/^(.handleWith) : {nm : String} -> (cmd : Command nm) -> (cmd ~~> IO a) -> IO a$/;"	d
+>	backend/src/Interface.idr	/^        Just exec <- pure $ !chezExec <|> !schemeExec <|> !envExec$/;"	c
+CHECKOUTDIR	Makefile	/^CHECKOUTDIR = $(INSTALLDIR)\/checkout$/;"	m
+CWD	Makefile	/^CWD = $(shell pwd)$/;"	m
+EXECDIR	Makefile	/^EXECDIR = $(INSTALLDIR)\/bin$/;"	m
+IDRIS2	Makefile	/^IDRIS2 ?= ~\/.idris2\/bin\/idris2$/;"	m
+IDRISVERSIONDIR	Makefile	/^IDRISVERSIONDIR = $(INSTALLDIR)\/versions$/;"	m
+INSTALLDIR	Makefile	/^	INSTALLDIR=$(TEST_INSTALLDIR) make install$/;"	m
+INSTALLDIR	Makefile	/^INSTALLDIR ?= ~\/.idv$/;"	m
+INTERACTIVE_TESTS	Makefile	/^INTERACTIVE_TESTS ?= --interactive$/;"	m
+TEST_INSTALLDIR	Makefile	/^TEST_INSTALLDIR ?= $(CWD)\/tests\/.idv$/;"	m
+b*	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (b* x y bits)$/;"	f
+b+	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (b+ x y bits)$/;"	f
+b-	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (b- x y bits)$/;"	f
+b/	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (b\/ x y bits)$/;"	f
+blodwen-and	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-and . args) `(bitwise-and ,@args))$/;"	f
+blodwen-args	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-args)$/;"	f
+blodwen-bits-shl	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-bits-shl x y bits)$/;"	f
+blodwen-condition	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-condition make-condition-variable)$/;"	f
+blodwen-condition-broadcast	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-condition-broadcast condition-variable-broadcast!)$/;"	f
+blodwen-condition-signal	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-condition-signal condition-variable-signal!)$/;"	f
+blodwen-condition-wait	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-condition-wait c m)$/;"	f
+blodwen-condition-wait-timeout	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-condition-wait-timeout c m t) ; XXX$/;"	f
+blodwen-error-quit	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-error-quit msg)$/;"	f
+blodwen-get-char	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-get-char p)$/;"	f
+blodwen-get-line	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-get-line p)$/;"	f
+blodwen-get-thread-data	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-get-thread-data ty)$/;"	f
+blodwen-hasenv	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-hasenv var)$/;"	f
+blodwen-lock	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-lock mutex-lock!)$/;"	f
+blodwen-mutex	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-mutex make-mutex)$/;"	f
+blodwen-or	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-or . args) `(bitwise-ior ,@args))$/;"	f
+blodwen-os	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-os)$/;"	f
+blodwen-read-args	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-read-args desc)$/;"	f
+blodwen-set-thread-data	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-set-thread-data a)$/;"	f
+blodwen-shl	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-shl x y) `(arithmetic-shift ,x ,y))$/;"	f
+blodwen-shr	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-shr x y) `(arithmetic-shift ,x (- ,y)))$/;"	f
+blodwen-sleep	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-sleep thread-sleep!)$/;"	f
+blodwen-system	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-system cmd)$/;"	f
+blodwen-thisthread	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-thisthread current-thread)$/;"	f
+blodwen-thread	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-thread p)$/;"	f
+blodwen-time	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-time)$/;"	f
+blodwen-unlock	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define blodwen-unlock mutex-unlock!)$/;"	f
+blodwen-usleep	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (blodwen-usleep s) (thread-sleep! (\/ s 1e6)))$/;"	f
+blodwen-xor	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (blodwen-xor . args) `(bitwise-xor ,@args))$/;"	f
+bootstrapBuild	backend/src/Interface.idr	/^bootstrapBuild : HasIO io => (resolvedVersion : Version) -> (buildPrefix : String) -> io ()$/;"	d
+build	backend/src/Interface.idr	/^build : HasIO io => (idrisExecutable : Version) -> (installedDir : String) -> (buildPrefix : String) -> io Bool$/;"	d
+buildAndInstall	backend/src/Interface.idr	/^buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()$/;"	d
+buildPrefix	backend/src/IdvPaths.idr	/^buildPrefix : Version -> String$/;"	d
+buildSelectedFn	backend/src/Interface.idr	/^      buildSelectedFn : (selectedVersion : Maybe Version) $/;"	d
+cast-string-double	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (cast-string-double x)$/;"	f
+cast-string-int	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (cast-string-int x)$/;"	f
+changeDirAndCheckout	backend/src/Interface.idr	/^        changeDirAndCheckout : io (Maybe (Either String ()))$/;"	d
+checkLocation	backend/src/IdvPaths.idr	/^      checkLocation : Maybe String -> io (Maybe String)$/;"	d
+checkout	backend/src/Git.idr	/^checkout : HasIO io => (tag : String) -> io Bool$/;"	d
+checkoutAndPullBranch	backend/src/Git.idr	/^checkoutAndPullBranch : HasIO io => (branch : String) -> io Bool$/;"	d
+checkoutIfAvailable	backend/src/Interface.idr	/^checkoutIfAvailable : HasIO io => Version -> io (Either String ())$/;"	d
+chezExec	backend/src/Interface.idr	/^      chezExec : io (Maybe String)$/;"	d
+clean	backend/src/Interface.idr	/^clean : HasIO io => io Bool$/;"	d
+cleanAndBuild	backend/src/Interface.idr	/^cleanAndBuild : HasIO io $/;"	d
+clone	backend/src/Git.idr	/^clone : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
+cloneIfNeeded	backend/src/Git.idr	/^cloneIfNeeded : HasIO io => (repoURL : String) -> (path : String) -> io Bool$/;"	d
+createDirIfNeeded	backend/src/System/Directory/Extra.idr	/^createDirIfNeeded : HasIO io => (path : String) -> io Bool$/;"	d
+createVersionsDir	backend/src/Interface.idr	/^createVersionsDir : HasIO io => Version -> io ()$/;"	d
+defaultIdris2Location	backend/src/IdvPaths/Generated.idr	/^defaultIdris2Location : String$/;"	d
+defaultPath	backend/src/IdvPaths.idr	/^      defaultPath : io (Maybe String)$/;"	d
+define-c-struct	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/foreign.scm	/^(define-macro (define-c-struct type . fields)$/;"	f
+dropPrefix	backend/src/Data/Version.idr	/^    dropPrefix : String -> String$/;"	d
+eatOutput	backend/src/System/Console/Extra.idr	/^eatOutput : HasIO io => (ignoreStdErr : Bool) -> (cmd : String) -> io Bool$/;"	d
+either-left	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (either-left x) `(vector 0 ,x))$/;"	f
+either-right	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (either-right x) `(vector 1 ,x))$/;"	f
+envExec	backend/src/Interface.idr	/^      envExec : io (Maybe String)$/;"	d
+exact-floor	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (exact-floor x)$/;"	f
+exitError	backend/src/Interface.idr	/^exitError : HasIO io => String -> io a$/;"	d
+exitError	cli/src/Main.idr	/^exitError : HasIO io => String -> io a$/;"	d
+exitSuccess	backend/src/Interface.idr	/^exitSuccess : HasIO io => String -> io a$/;"	d
+exitSuccess	cli/src/Main.idr	/^exitSuccess : HasIO io => String -> io a$/;"	d
+fetch	backend/src/Git.idr	/^fetch : HasIO io => io Bool$/;"	d
+fetchAndListVersions	backend/src/Git.idr	/^fetchAndListVersions : HasIO io => io (List Version)$/;"	d
+function.support_system_file_chmod	tests/.idv/versions/0_2_1/idris2-0.2.1/support/js/support_system_file.js	/^function support_system_file_chmod(filename, mode){$/;"	f
+function.support_system_file_getStr	tests/.idv/versions/0_2_1/idris2-0.2.1/support/js/support_system_file.js	/^function support_system_file_getStr(){$/;"	f
+function.support_system_file_openFile	tests/.idv/versions/0_2_1/idris2-0.2.1/support/js/support_system_file.js	/^function support_system_file_openFile(n,m){$/;"	f
+get-tag	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (get-tag x) `(vector-ref ,x 0))$/;"	f
+getSelectedVersion	backend/src/Installed.idr	/^getSelectedVersion : HasIO io => io (Maybe Version)$/;"	d
+getSystemVersion	backend/src/Installed.idr	/^getSystemVersion : HasIO io => io (Maybe Version)$/;"	d
+getVersion	backend/src/Installed.idr	/^getVersion : HasIO io => (idrisExecPath : String) -> io (Maybe Version)$/;"	d
+go	backend/src/Data/Version.idr	/^    go : List Version $/;"	d
+go	backend/src/Interface.idr	/^      go : io Bool$/;"	d
+handleCommand'	cli/src/Main.idr	/^handleCommand' : Command.idv ~~> IO ()$/;"	d
+idrisRepoURL	backend/src/IdvPaths.idr	/^idrisRepoURL : String$/;"	d
+idrisSymlinkedPath	backend/src/IdvPaths.idr	/^idrisSymlinkedPath : String$/;"	d
+idv	cli/src/Command.idr	/^idv : Command "idv"$/;"	d
+idvLocation	backend/src/IdvPaths/Generated.idr	/^idvLocation : String$/;"	d
+ignoreOutput	backend/src/System/Console/Extra.idr	/^ignoreOutput : HasIO io => (cmd : String) -> io Int$/;"	d
+ignoreStdErr	backend/src/System/Console/Extra.idr	/^ignoreStdErr : String$/;"	d
+ignoreStdOut	backend/src/System/Console/Extra.idr	/^ignoreStdOut : String$/;"	d
+inDir	backend/src/System/Directory/Extra.idr	/^inDir : HasIO io => (path : String) -> io a -> io (Maybe a)$/;"	d
+install	backend/src/Interface.idr	/^install : HasIO io $/;"	d
+installAPICommand	backend/src/Interface.idr	/^installAPICommand : HasIO io => (version : Version) -> io ()$/;"	d
+installApi	backend/src/Interface.idr	/^installApi : HasIO io => io ()$/;"	d
+installCommand	backend/src/Interface.idr	/^installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()$/;"	d
+installCommand	cli/src/Command.idr	/^    installCommand : Command "install"$/;"	d
+installedIdrisPath	backend/src/IdvPaths.idr	/^installedIdrisPath : Version -> String$/;"	d
+integer->bits16	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define integer->bits16 (lambda (x) (modulo x (expt 2 16))))$/;"	f
+integer->bits32	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define integer->bits32 (lambda (x) (modulo x (expt 2 32))))$/;"	f
+integer->bits64	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define integer->bits64 (lambda (x) (modulo x (expt 2 64))))$/;"	f
+integer->bits8	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define integer->bits8 (lambda (x) (modulo x (expt 2 8))))$/;"	f
+isInstalled	backend/src/Installed.idr	/^isInstalled : HasIO io => Version -> io (Either String Bool)$/;"	d
+learn	watch_and_learn.sh	/^function learn() {$/;"	f
+listTags	backend/src/Git.idr	/^listTags : HasIO io => io (List String)$/;"	d
+listVersions	backend/src/Git.idr	/^listVersions : HasIO io => io (List Version)$/;"	d
+listVersions	backend/src/Installed.idr	/^listVersions : HasIO io => io (Maybe (List Version))$/;"	d
+listVersionsCommand	backend/src/Interface.idr	/^listVersionsCommand : HasIO io => io ()$/;"	d
+main	cli/src/Main.idr	/^main : IO ()$/;"	d
+main	tests/Main.idr	/^main : IO ()$/;"	d
+nonEmpty	backend/src/Data/Version.idr	/^    nonEmpty : String -> Maybe String$/;"	d
+orError	cli/src/Command.idr	/^orError : (err : String) -> Maybe a -> Either String a$/;"	d
+parseFolderEntries	backend/src/Installed.idr	/^      parseFolderEntries : List String -> List Version$/;"	d
+parseSpokenVersion	backend/src/Data/Version.idr	/^parseSpokenVersion : String -> Maybe Version$/;"	d
+parseVersion	backend/src/Data/Version.idr	/^parseVersion : String -> Maybe Version$/;"	d
+pathExpansion	backend/src/System/Directory/Extra.idr	/^pathExpansion : HasIO io => (path : String) -> io (Maybe String)$/;"	d
+prereleaseIdentifier	backend/src/Data/Version.idr	/^  prereleaseIdentifier : Maybe String$/;"	d
+printVersion	backend/src/Interface.idr	/^      printVersion : (Bool, Maybe Version, Maybe Version) -> String$/;"	d
+pull	backend/src/Git.idr	/^pull : HasIO io => io Bool$/;"	d
+readLines	backend/src/System/Console/Extra.idr	/^readLines : HasIO io => Fuel -> (ignoreStdErr : Bool) -> (cmd : String) -> io (List String)$/;"	d
+readLines'	backend/src/System/Console/Extra.idr	/^    readLines' : Fuel -> File -> List String -> io (List String)$/;"	d
+redirectStdErr	backend/src/System/Console/Extra.idr	/^redirectStdErr : String$/;"	d
+relativeBinPath	backend/src/IdvPaths.idr	/^relativeBinPath : String$/;"	d
+relativeCheckoutPath	backend/src/IdvPaths.idr	/^relativeCheckoutPath : String$/;"	d
+relativeVersionsPath	backend/src/IdvPaths.idr	/^relativeVersionsPath : String$/;"	d
+replaceUnderscores	backend/src/Installed.idr	/^      replaceUnderscores : String -> String$/;"	d
+repoExists	backend/src/Git.idr	/^repoExists : HasIO io => io Bool$/;"	d
+res	backend/src/Git.idr	/^checkout tag = [ res == 0 | res <- ignoreOutput "git checkout \\{tag}" ]$/;"	c
+res	backend/src/Git.idr	/^fetch = [ res == 0 | res <- ignoreOutput "git fetch --tags" ]$/;"	c
+res	backend/src/Git.idr	/^pull = [ res == 0 | res <- ignoreOutput "git pull --tags" ]$/;"	c
+res	backend/src/Interface.idr	/^clean = [ res == 0 | res <- system "make clean" ]$/;"	c
+res	backend/src/System/File/Extra.idr	/^  [ res == 0 | res <- if isWindows$/;"	c
+schemeExec	backend/src/Interface.idr	/^      schemeExec : io (Maybe String)$/;"	d
+selectAndCheckout	backend/src/Interface.idr	/^selectAndCheckout : HasIO io => (version : Version) -> io Bool$/;"	d
+selectCommand	backend/src/Interface.idr	/^selectCommand : HasIO io => (version : Version) -> io ()$/;"	d
+selectCommand	cli/src/Command.idr	/^    selectCommand : Command "select"$/;"	d
+selectSystemCommand	backend/src/Interface.idr	/^selectSystemCommand : HasIO io => io ()$/;"	d
+selectVersion	backend/src/Installed.idr	/^selectVersion : HasIO io => Version -> io (Either String ())$/;"	d
+string-cons	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (string-cons x y)$/;"	f
+string-reverse	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define-macro (string-reverse x)$/;"	f
+string-substr	tests/.idv/versions/0_2_1/idris2-0.2.1/support/gambit/support.scm	/^(define (string-substr off len s)$/;"	f
+support_system_directory_changeDir	tests/.idv/versions/0_2_1/idris2-0.2.1/support/js/support_system_directory.js	/^function support_system_directory_changeDir(d){$/;"	f
+support_system_directory_createDir	tests/.idv/versions/0_2_1/idris2-0.2.1/support/js/support_system_directory.js	/^function support_system_directory_createDir(d){$/;"	f
+symlink	backend/src/System/File/Extra.idr	/^symlink : HasIO io => (from : String) -> (to : String) -> io Bool$/;"	d
+systemIdrisPath	backend/src/IdvPaths.idr	/^systemIdrisPath : HasIO io => io (Maybe String)$/;"	d
+tag	backend/src/Data/Version.idr	/^  tag : String$/;"	d
+tests	tests/Main.idr	/^tests : TestPool$/;"	d
+undoSelect	backend/src/Installed.idr	/^      undoSelect : (previous : Maybe Version) -> io (Either String ())$/;"	d
+unselect	backend/src/Installed.idr	/^unselect : HasIO io => io (Either String ())$/;"	d
+updateMainBranch	backend/src/Interface.idr	/^updateMainBranch : HasIO io => io ()$/;"	d
+vectCompare	backend/src/Data/Version.idr	/^      vectCompare : Vect 3 Nat -> Vect 3 Nat -> Ordering$/;"	d
+version	backend/src/Data/Version.idr	/^version : (tag : String) -> (prereleaseIdentifier : Maybe String) -> Vect 3 Nat -> Version$/;"	d
+version	cli/src/Command.idr	/^version : Arguments$/;"	d
+versionDirName	backend/src/IdvPaths.idr	/^versionDirName : Version -> String$/;"	d
+versionFolders	backend/src/Installed.idr	/^      versionFolders : (path : String) -> io (Maybe (List String))$/;"	d
+versionPath	backend/src/IdvPaths.idr	/^versionPath : Version -> String$/;"	d
+versions	backend/src/Installed.idr	/^      versions : (path : String) -> io (Maybe (List Version))$/;"	d
+versionsDir	backend/src/Installed.idr	/^versionsDir : String$/;"	d
+watch	watch_and_learn.sh	/^function watch() {$/;"	f
+withVersion	backend/src/Installed.idr	/^withVersion : HasIO io => Version -> io (Either String a) -> io (Either String a)$/;"	d
+zipMatch	backend/src/Data/Version.idr	/^zipMatch : List Version -> List Version -> List (Maybe Version, Maybe Version)$/;"	d
+||	backend/src/Data/Version.idr	/^  ||| If the version is pre-release, the part of the version string following$/;"	c
+||	backend/src/Data/Version.idr	/^  ||| The full tag of the version. In the context of git this is exactly the$/;"	c
+||	backend/src/Data/Version.idr	/^  ||| a dash (e.g. 'alpha.1' in 0.1.0-alpha.1).$/;"	c
+||	backend/src/Data/Version.idr	/^  ||| git tag. Elsewhere this field might hold other meaning.$/;"	c

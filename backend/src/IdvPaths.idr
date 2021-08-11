@@ -4,6 +4,9 @@ import public IdvPaths.Generated
 
 import Data.Version
 import System.Path
+import System.Directory.Extra
+import System
+import System.File
 
 export
 idrisRepoURL : String
@@ -59,4 +62,22 @@ export
 installedIdrisPath : Version -> String
 installedIdrisPath version = 
   versionPath version </> "bin" </> "idris2"
+
+||| The install location of the system copy of Idris 2.
+||| If Idris 2 cannot be located on the system (i.e.
+||| outside of the Idv versions directory) this function
+||| returns Nothing.
+export
+systemIdrisPath : HasIO io => io (Maybe String)
+systemIdrisPath = do
+  Nothing <- checkLocation =<< getEnv "IDRIS2"
+    | Just envOverride => pure $ Just envOverride
+  checkLocation =<< defaultPath
+    where
+      defaultPath : io (Maybe String)
+      defaultPath = pathExpansion defaultIdris2Location
+
+      checkLocation : Maybe String -> io (Maybe String)
+      checkLocation Nothing     = pure Nothing
+      checkLocation (Just path) = pure $ if !(exists path) then Just path else Nothing
 
