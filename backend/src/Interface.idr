@@ -194,7 +194,7 @@ listVersionsCommand = do
     | Nothing => exitError "Failed to retrieve remote versions."
   Just installedVersions <- Installed.listVersions
     | Nothing => exitError "Failed to list local versions."
-  systemInstall <- let (=<<) = Prelude.(=<<) @{Monad.Compose} in getVersion =<< systemIdrisPath
+  systemInstall <- getSystemVersion
   selectedVersion <- getSelectedVersion
   let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
   let selectedInstalled = buildSelectedFn selectedVersion
