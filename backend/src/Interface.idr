@@ -259,7 +259,7 @@ installAPICommand version = do
   -- if we know we used to have a different version of Idris selected, switch back.
   whenJust selectedVersion $ \version => do
     Right () <- selectVersion version
-      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{show version} with error: err"
+      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{show version} with error: \{err}"
     pure ()
 
 export
