@@ -11,9 +11,9 @@ CHECKOUTDIR = $(INSTALLDIR)/checkout
 INTERACTIVE_TESTS ?= --interactive
 TEST_INSTALLDIR ?= $(CWD)/tests/.idv
 
-all: build
+.PHONY: all build install test clean clean-backend clean-tests deps build-idv build-backend
 
-.PHONY: build install test clean deps build-idv build-backend
+all: build
 
 depends/collie-0:
 	@mkdir -p depends/collie-0 && \
@@ -26,16 +26,19 @@ depends/collie-0:
 	make && \
 	cp -R ./build/ttc/* ../../depends/collie-0 && \
 	cd ../.. && \
-	rm -rf ./deps-build/collie
+	rm -rf ./deps-build/collie && \
+	touch depends/collie-0
 
-depends/idv-backend-0: backend/src
+depends/idv-backend-0: backend/idv-backend.ipkg backend/src/**/*.idr 
 	@mkdir -p depends/idv-backend-0 && \
 	rm -rf ./build && \
 	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
 	cd backend && \
 	idris2 --build idv-backend.ipkg &&\
 	cp -R ./build/ttc/* ../depends/idv-backend-0 && \
-	rm -rf ./build
+	rm -rf ./build && \
+	cd .. && \
+	touch depends/idv-backend-0
 
 deps: depends/collie-0 depends/idv-backend-0
 
