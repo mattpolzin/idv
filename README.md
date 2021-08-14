@@ -65,3 +65,25 @@ $ idris2 --version
 Idris 2, version 0.4.0-b03395deb
 ```
 
+## Wishlist
+Before helping out, take a quick look at the [contribution guidelines](CONTRIBUTING.md).
+
+### Features
+- [ ] Uninstall Idris 2 versions
+- [ ] List details of a specific installed version (what details exactly, I have not thought through)
+  - [ ] Installed packages?
+  - [ ] Is Idris 2 API package installed?
+  - [ ] Release date?
+  - [ ] Release notes?
+- [ ] List packages installed (for all Idris 2 versions or RE the previous point about details maybe this is not a good idea?)
+- [ ] Alternative Idris 2 install methods?
+  - [ ] Install prebuilt if available for current operating system?
+  - [ ] Download source as tar & build as alternative to relying on `git` (as an option, not the new default)?
+
+### Code & Project
+- [ ] Improvements to CI (including the tests themselves)
+- [ ] Prebuilt `idv` for certain operating systems
+- [ ] Less repetition around paths & path expansion
+  - [ ] Reader Monad (with HasIO?)?
+  - [ ] Auto implicit(s)?
+  - [ ] Selective required Config properties (a la errors added to the `Control.App` type)
