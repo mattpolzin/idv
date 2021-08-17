@@ -94,7 +94,8 @@ getVersion idrisExecPath = do
 export
 getSystemVersion : HasIO io => io (Maybe Version)
 getSystemVersion = 
-  let (=<<) = Prelude.(=<<) @{Monad.Compose} in getVersion =<< systemIdrisPath
+  let (=<<) = Prelude.(=<<) @{Monad.Compose}
+  in  getVersion =<< systemIdrisPath
 
 export
 getSelectedVersion : HasIO io => io (Maybe Version)

@@ -31,12 +31,10 @@ depends/collie-0:
 
 depends/idv-backend-0: backend/idv-backend.ipkg backend/src/**/*.idr 
 	@mkdir -p depends/idv-backend-0 && \
-	rm -rf ./build && \
 	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
 	cd backend && \
 	idris2 --build idv-backend.ipkg &&\
 	cp -R ./build/ttc/* ../depends/idv-backend-0 && \
-	rm -rf ./build && \
 	cd .. && \
 	touch depends/idv-backend-0
 
@@ -64,11 +62,11 @@ clean-tests:
 
 clean-backend:
 	rm -rf ./depends/idv-backend-0
+	rm -rf ./backend/build
 
 clean: clean-tests clean-backend
 	rm -rf ./depends
 	rm -rf ./build
-	rm -rf ./backend/build
 
 tests/.idv/bin/idv:
 	INSTALLDIR=$(TEST_INSTALLDIR) make

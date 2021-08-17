@@ -11,7 +11,7 @@ buildAndInstall	src/Interface.idr	/^buildAndInstall : HasIO io => Version -> (cl
 buildPrefix	src/IdvPaths.idr	/^buildPrefix : Version -> String$/;"	d
 buildSelectedFn	src/Interface.idr	/^      buildSelectedFn : (selectedVersion : Maybe Version) $/;"	d
 changeDirAndCheckout	src/Interface.idr	/^        changeDirAndCheckout : io (Maybe (Either String ()))$/;"	d
-checkLocation	src/Interface.idr	/^      checkLocation : Maybe String -> io (Maybe String)$/;"	d
+checkLocation	src/IdvPaths.idr	/^      checkLocation : Maybe String -> io (Maybe String)$/;"	d
 checkout	src/Git.idr	/^checkout : HasIO io => (tag : String) -> io Bool$/;"	d
 checkoutAndPullBranch	src/Git.idr	/^checkoutAndPullBranch : HasIO io => (branch : String) -> io Bool$/;"	d
 checkoutIfAvailable	src/Interface.idr	/^checkoutIfAvailable : HasIO io => Version -> io (Either String ())$/;"	d
@@ -23,7 +23,7 @@ cloneIfNeeded	src/Git.idr	/^cloneIfNeeded : HasIO io => (repoURL : String) -> (p
 createDirIfNeeded	src/System/Directory/Extra.idr	/^createDirIfNeeded : HasIO io => (path : String) -> io Bool$/;"	d
 createVersionsDir	src/Interface.idr	/^createVersionsDir : HasIO io => Version -> io ()$/;"	d
 defaultIdris2Location	src/IdvPaths/Generated.idr	/^defaultIdris2Location : String$/;"	d
-defaultPath	src/Interface.idr	/^      defaultPath : io (Maybe String)$/;"	d
+defaultPath	src/IdvPaths.idr	/^      defaultPath : io (Maybe String)$/;"	d
 dropPrefix	src/Data/Version.idr	/^    dropPrefix : String -> String$/;"	d
 eatOutput	src/System/Console/Extra.idr	/^eatOutput : HasIO io => (ignoreStdErr : Bool) -> (cmd : String) -> io Bool$/;"	d
 envExec	src/Interface.idr	/^      envExec : io (Maybe String)$/;"	d
@@ -32,6 +32,7 @@ exitSuccess	src/Interface.idr	/^exitSuccess : HasIO io => String -> io a$/;"	d
 fetch	src/Git.idr	/^fetch : HasIO io => io Bool$/;"	d
 fetchAndListVersions	src/Git.idr	/^fetchAndListVersions : HasIO io => io (List Version)$/;"	d
 getSelectedVersion	src/Installed.idr	/^getSelectedVersion : HasIO io => io (Maybe Version)$/;"	d
+getSystemVersion	src/Installed.idr	/^getSystemVersion : HasIO io => io (Maybe Version)$/;"	d
 getVersion	src/Installed.idr	/^getVersion : HasIO io => (idrisExecPath : String) -> io (Maybe Version)$/;"	d
 go	src/Data/Version.idr	/^    go : List Version $/;"	d
 go	src/Interface.idr	/^      go : io Bool$/;"	d
@@ -47,6 +48,7 @@ installAPICommand	src/Interface.idr	/^installAPICommand : HasIO io => (version :
 installApi	src/Interface.idr	/^installApi : HasIO io => io ()$/;"	d
 installCommand	src/Interface.idr	/^installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()$/;"	d
 installedIdrisPath	src/IdvPaths.idr	/^installedIdrisPath : Version -> String$/;"	d
+isInstalled	src/Installed.idr	/^isInstalled : HasIO io => Version -> io (Either String Bool)$/;"	d
 listTags	src/Git.idr	/^listTags : HasIO io => io (List String)$/;"	d
 listVersions	src/Git.idr	/^listVersions : HasIO io => io (List Version)$/;"	d
 listVersions	src/Installed.idr	/^listVersions : HasIO io => io (Maybe (List Version))$/;"	d
@@ -78,7 +80,7 @@ selectCommand	src/Interface.idr	/^selectCommand : HasIO io => (version : Version
 selectSystemCommand	src/Interface.idr	/^selectSystemCommand : HasIO io => io ()$/;"	d
 selectVersion	src/Installed.idr	/^selectVersion : HasIO io => Version -> io (Either String ())$/;"	d
 symlink	src/System/File/Extra.idr	/^symlink : HasIO io => (from : String) -> (to : String) -> io Bool$/;"	d
-systemIdrisPath	src/Interface.idr	/^systemIdrisPath : HasIO io => io (Maybe String)$/;"	d
+systemIdrisPath	src/IdvPaths.idr	/^systemIdrisPath : HasIO io => io (Maybe String)$/;"	d
 tag	src/Data/Version.idr	/^  tag : String$/;"	d
 undoSelect	src/Installed.idr	/^      undoSelect : (previous : Maybe Version) -> io (Either String ())$/;"	d
 unselect	src/Installed.idr	/^unselect : HasIO io => io (Either String ())$/;"	d
