@@ -2,6 +2,7 @@ module Command
 
 import Collie
 import Collie.Options.Domain
+import Data.List1
 
 import Data.Version
 
@@ -63,8 +64,8 @@ cmd .handleWith h
                           putStrLn (cmd .usage)
                           putStrLn ""
                           exitFailure
-       let Right args = finalising args
-         | Left err => do putStrLn (show err)
+       let Pure args = finalising args
+         | Fail err => do putStrLn (show err)
                           exitFailure
        handle args h
 
