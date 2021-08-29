@@ -70,6 +70,7 @@ Before helping out, take a quick look at the [contribution guidelines](CONTRIBUT
 
 ### Features
 - [ ] Uninstall Idris 2 versions
+- [ ] Update system install to HEAD of main
 - [ ] List details of a specific installed version (what details exactly, I have not thought through)
   - [ ] Installed packages?
   - [ ] Is Idris 2 API package installed?
