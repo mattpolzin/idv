@@ -81,6 +81,7 @@ selectVersion proposedVersion = do
            | False => pure $ Left "Failed to create symlink for Idris 2 version \{show version}."
          pure $ Right ()
 
+||| Get the version of the Idris installed at the given path.
 export
 getVersion : HasIO io => (idrisExecPath : String) -> io (Maybe Version)
 getVersion idrisExecPath = do

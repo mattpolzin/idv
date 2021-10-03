@@ -33,17 +33,22 @@ handleCommand' : Command.idv ~~> IO ()
 handleCommand' =
   [ const $ do putStrLn "Expected a subcommand."
                exitError idv.usage
-  , "install" ::= [ (\args => let version = args.arguments
-                              in  if args.modifiers.project "--api"
-                                     then installAPICommand version
-                                     else installCommand version True
-                    ) ]
-  , "select"  ::= [ (\args => let version = args.arguments
-                              in  selectCommand version )
-                  , "system" ::= [ const selectSystemCommand ]
-                  ]
-  , "--help"  ::= [ const . exitSuccess $ idv.usage ]
-  , "list"    ::= [ const listVersionsCommand ]
+  , "install"   ::= [ (\args => let version = args.arguments
+                                in  if args.modifiers.project "--api"
+                                       then installAPICommand version
+                                       else installCommand version True
+                      )
+                    ]
+  , "uninstall" ::= [ (\args => let version = args.arguments
+                                in  uninstallCommand version
+                      )
+                    ]
+  , "select"    ::= [ (\args => let version = args.arguments
+                                in  selectCommand version )
+                    , "system" ::= [ const selectSystemCommand ]
+                    ]
+  , "--help"    ::= [ const . exitSuccess $ idv.usage ]
+  , "list"      ::= [ const listVersionsCommand ]
   ]
 
 

@@ -6,6 +6,7 @@ import Data.String
 import Data.String.Extra
 import Data.Vect
 
+||| A Semantic version.
 public export
 record Version where
   constructor V
