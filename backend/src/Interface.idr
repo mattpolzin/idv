@@ -166,7 +166,11 @@ uninstall : HasIO io => Version -> io ()
 uninstall version = do
   Just installPath <- pathExpansion $ versionPath version
     | Nothing => exitError "Failed to locate an install path for version \{show version}."
-  removeDir installPath
+  putStrLn "uninstalling from \{installPath}..."
+  -- TODO: make cross-platform remove recursive. current standard lib options won't do it.
+  0 <- system $ "rm -rf " ++ installPath
+    | _ => exitError "Failed to remove install directory."
+  pure ()
 
 ||| Assumes the current directory is an Idris 2 repository. Runs only
 ||| the install of the Idris 2 API.

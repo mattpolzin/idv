@@ -29,7 +29,7 @@ depends/collie-0:
 	rm -rf ./deps-build/collie && \
 	touch depends/collie-0
 
-depends/idv-backend-0: backend/idv-backend.ipkg backend/src/**/*.idr 
+depends/idv-backend-0: backend/idv-backend.ipkg backend/src/*.idr backend/src/**/*.idr 
 	@mkdir -p depends/idv-backend-0 && \
 	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
 	cd backend && \
