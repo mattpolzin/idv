@@ -63,3 +63,15 @@ readLines fuel ignStdErr cmd = do
              | Left _ => readLines' Dry h acc
            readLines' fuel h (l :: acc)
 
+||| Prompt the user for confirmation to do something.
+export
+confirm : HasIO io => (message : String) -> io Bool
+confirm message = do
+  putStr $ message ++ " [Y/n] "
+  response <- getLine
+  case response of
+       ""  => pure True
+       "y" => pure True
+       "Y" => pure True
+       _   => pure False
+

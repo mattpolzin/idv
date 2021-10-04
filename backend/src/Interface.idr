@@ -5,6 +5,7 @@ import Data.Maybe
 import Data.Version
 import System
 import System.Console.Extra
+import System.Directory
 import System.Directory.Extra
 import System.File
 import System.File.Extra
@@ -160,6 +161,17 @@ buildAndInstall version cleanAfter = do
   unless (isJust moveDirRes) $ 
     exitError "Failed to install version \{show version}."
 
+||| Uninstall the given version. Assumes that version exists.
+uninstall : HasIO io => Version -> io ()
+uninstall version = do
+  Just installPath <- pathExpansion $ versionPath version
+    | Nothing => exitError "Failed to locate an install path for version \{show version}."
+  putStrLn "uninstalling from \{installPath}..."
+  -- TODO: make cross-platform remove recursive. current standard lib options won't do it.
+  0 <- system $ "rm -rf " ++ installPath
+    | _ => exitError "Failed to remove install directory."
+  pure ()
+
 ||| Assumes the current directory is an Idris 2 repository. Runs only
 ||| the install of the Idris 2 API.
 installApi : HasIO io => io ()
@@ -218,6 +230,17 @@ installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
 installCommand version cleanAfter = do
   createVersionsDir version
   buildAndInstall version cleanAfter
+
+export
+uninstallCommand : HasIO io => (version : Version) -> io ()
+uninstallCommand version =
+  case !(isInstalled version) of
+       Left err    => exitError err
+       Right False => exitError "Version \{show version} is not installed."
+       Right True  =>
+         when !(confirm "Are you sure you want to uninstall version \{show version}?") $ do
+           uninstall version
+           exitSuccess "Uninstalled version \{show version}."
 
 export
 selectCommand : HasIO io => (version : Version) -> io ()

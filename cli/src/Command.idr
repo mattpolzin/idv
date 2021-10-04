@@ -21,10 +21,11 @@ idv = MkCommand
                   Idris 2 versions.
                   """
   , subcommands =
-     [ "--help"  ::= basic "Print this help text." none
-     , "list"    ::= basic "List all installed and available Idris 2 versions." none
-     , "install" ::= installCommand
-     , "select"  ::= selectCommand
+     [ "--help"    ::= basic "Print this help text." none
+     , "list"      ::= basic "List all installed and available Idris 2 versions." none
+     , "install"   ::= installCommand
+     , "uninstall" ::= uninstallCommand
+     , "select"    ::= selectCommand
      ]
   , modifiers = []
   , arguments = none
@@ -42,6 +43,15 @@ idv = MkCommand
                                 the API package will be added under the specified installation.
                                 """)
           ]
+      , arguments = version
+      }
+
+    uninstallCommand : Command "uninstall"
+    uninstallCommand = MkCommand
+      { name = "uninstall"
+      , description = "<version> Uninstall the given Idris 2 version."
+      , subcommands = []
+      , modifiers = []
       , arguments = version
       }
 
