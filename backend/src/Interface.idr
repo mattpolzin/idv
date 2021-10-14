@@ -127,9 +127,9 @@ install : HasIO io
        -> (buildPrefix : String) 
        -> io ()
 install installOver installedDir version buildPrefix = do
-  let executableOverride = if installOver
-                              then "IDRIS2_BOOT=\"\{installedDir}\""
-                              else ""
+  let executableOverride : String = if installOver
+                                       then "IDRIS2_BOOT=\"\{installedDir}\""
+                                       else ""
   0 <- system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
     | _ => exitError "Failed to install Idris2 \{show version}."
   putStrLn ""
