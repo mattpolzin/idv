@@ -45,7 +45,7 @@ updateMainBranch = do
 
 ||| Assumes the current working directory is an Idris repository.
 clean : HasIO io => io Bool
-clean = [ res == 0 | res <- system "make clean" ]
+clean = [ res == 0 | res <- System.system "make clean" ]
 
 ||| Builds the current repository _using_ the executable for the
 ||| given version. This means you must have already installed the
@@ -54,7 +54,7 @@ clean = [ res == 0 | res <- system "make clean" ]
 ||| Assumes the current working directory is an Idris repository.
 build : HasIO io => (idrisExecutable : Version) -> (installedDir : String) -> (buildPrefix : String) -> io Bool
 build version installedDir buildPrefix = 
-  [ res == 0 | res <- system "PREFIX=\"\{buildPrefix}\" IDRIS2_BOOT=\"\{installedDir}\" make" ]
+  [ res == 0 | res <- System.system "PREFIX=\"\{buildPrefix}\" IDRIS2_BOOT=\"\{installedDir}\" make" ]
 
 ||| Assumes the current working directory is an Idris repository.
 cleanAndBuild : HasIO io 
@@ -112,7 +112,7 @@ bootstrapBuild version buildPrefix = do
               putStrLn "Could not find Scheme executable. Specify executable to use with SCHEME environment variable."
               pure False
         putStrLn "Building with Scheme executable: \{exec}"
-        res <- system "make clean && PREFIX=\"\{buildPrefix}\" SCHEME=\"\{exec}\" make bootstrap"
+        res <- System.system "make clean && PREFIX=\"\{buildPrefix}\" SCHEME=\"\{exec}\" make bootstrap"
         pure $ res == 0
 
 ||| Assumes the current working directory is an Idris repository.
@@ -130,7 +130,7 @@ install installOver installedDir version buildPrefix = do
   let executableOverride : String = if installOver
                                        then "IDRIS2_BOOT=\"\{installedDir}\""
                                        else ""
-  0 <- system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
+  0 <- System.system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
     | _ => exitError "Failed to install Idris2 \{show version}."
   putStrLn ""
   putStrLn "Idris2 version \{show version} successfully installed to \{buildPrefix}."
@@ -168,7 +168,7 @@ uninstall version = do
     | Nothing => exitError "Failed to locate an install path for version \{show version}."
   putStrLn "uninstalling from \{installPath}..."
   -- TODO: make cross-platform remove recursive. current standard lib options won't do it.
-  0 <- system $ "rm -rf " ++ installPath
+  0 <- System.system $ "rm -rf " ++ installPath
     | _ => exitError "Failed to remove install directory."
   pure ()
 
@@ -176,7 +176,7 @@ uninstall version = do
 ||| the install of the Idris 2 API.
 installApi : HasIO io => io ()
 installApi = do
-  0 <- system "make install-api"
+  0 <- System.system "make install-api"
     | _ => exitError "Failed to install Idris2 API package."
   putStrLn ""
   putStrLn "Idris2 API package successfully installed."
