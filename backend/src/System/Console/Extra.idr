@@ -39,7 +39,7 @@ eatOutput ignStdErr cmd = do
     | Left _ => pure False
   Right l <- fGetLine h
     | Left _ => pure False
-  pclose h
+  ignore $ pclose h
   pure $ l /= ""
 
 ||| Read lines from the given command's stdout.
@@ -50,7 +50,7 @@ readLines fuel ignStdErr cmd = do
     Right h <- popen fullCmd Read
       | _ => pure []
     lines <- readLines' fuel h []
-    pclose h
+    ignore $ pclose h
     pure lines
   where
     readLines' : Fuel -> File -> List String -> io (List String)
