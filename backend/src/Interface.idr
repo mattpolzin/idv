@@ -130,8 +130,11 @@ install : HasIO io
 install installOver installedDir version buildPrefix = do
   0 <- installCompiler
     | _ => exitError "Failed to install Idris2 \{version}."
-  0 <- installLibsWithSrc
-    | _ => exitError "Failed to install Idris2 libraries \{version}."
+  -- Idris2 v0.4.0 was when install-with-src was added.
+  when (version >= (V 0 4 0 Nothing "")) $ do
+    0 <- installLibsWithSrc
+      | _ => exitError "Failed to install Idris2 libraries \{version}."
+    pure ()
   putStrLn ""
   putStrLn "Idris2 version \{version} successfully installed to \{buildPrefix}."
   pure ()
@@ -186,13 +189,20 @@ uninstall version = do
 
 ||| Assumes the current directory is an Idris 2 repository. Runs only
 ||| the install of the Idris 2 API.
-installApi : HasIO io => io ()
-installApi = do
-  0 <- System.system "make install-with-src-api"
+installApi : HasIO io => Version -> io ()
+installApi version = do
+  0 <- System.system "make install-\{maybeWithSrc}"
     | _ => exitError "Failed to install Idris2 API package."
   putStrLn ""
   putStrLn "Idris2 API package successfully installed."
   ignore $ clean
+
+  where
+    -- Idris2 v0.4.0 was when install-with-src was added.
+    maybeWithSrc : String
+    maybeWithSrc = if version >= (V 0 4 0 Nothing "")
+                      then "with-src-api"
+                      else "api"
 
 ||| Select the given version if it is installed (as in set it as the version used
 ||| when the `idris2` command is executed). Then checkout that same version in the
@@ -286,7 +296,7 @@ installAPICommand version = do
     Right () <- selectVersion version
       | Left err => exitError err
     pure ()
-  Just _ <- inDir relativeCheckoutPath installApi
+  Just _ <- inDir relativeCheckoutPath (installApi version)
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
   whenJust selectedVersion $ \version => do
