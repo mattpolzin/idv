@@ -297,3 +297,17 @@ installAPICommand version = do
       | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{version} with error: \{err}"
     pure ()
 
+||| Install the Idris 2 LSP (and the related version of Idris, if needed).
+installLSPCommand : HasIO io => (version : Version) -> io ()
+installLSPCommand version = do
+  selectedVersion <- getSelectedVersion
+  -- don't reinstall Idris 2 and its API unless needed:
+  unless !selectIdrisWithAPI $ do
+    ?installAPI
+  ?installLSP
+
+  where
+    ||| Select the requested Idris version and verify it has
+    ||| the API installed.
+    selectIdrisWithAPI : io Bool
+
