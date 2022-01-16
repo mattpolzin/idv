@@ -14,6 +14,7 @@ import System.File.Extra
 import System.Path
 
 import IdvPaths
+import Interp
 
 versionsDir : String
 versionsDir =
@@ -56,7 +57,7 @@ unselect = do
     | Nothing => pure $ Left "Could not resolve Idris 2 symlink path."
   Right () <- removeFile lnFile
     | Left FileNotFound => pure $ Right () -- no problem here, job done.
-    | Left err => pure $ Left "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{show err}."
+    | Left err => pure $ Left "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{err}."
   pure $ Right ()
 
 ||| Attempt to select the given version. Fails if the version
@@ -67,7 +68,7 @@ selectVersion proposedVersion = do
   Just localVersions <- listVersions
     | Nothing => pure $ Left "Could not look up local versions."
   case find (== proposedVersion) localVersions of
-       Nothing      => pure $ Left "Idris 2 version \{show proposedVersion} is not installed.\nInstalled versions: \{show $ sort localVersions}."
+       Nothing      => pure $ Left "Idris 2 version \{proposedVersion} is not installed.\nInstalled versions: \{sort localVersions}."
        Just version => do
          Right () <- unselect
            | Left err => pure $ Left err
@@ -78,7 +79,7 @@ selectVersion proposedVersion = do
          Just linked <- pathExpansion proposedSymlinked
            | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedSymlinked}."
          True <- symlink installed linked
-           | False => pure $ Left "Failed to create symlink for Idris 2 version \{show version}."
+           | False => pure $ Left "Failed to create symlink for Idris 2 version \{version}."
          pure $ Right ()
 
 ||| Get the version of the Idris installed at the given path.
