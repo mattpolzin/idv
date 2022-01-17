@@ -239,7 +239,10 @@ uninstall version = do
 ||| the install of the Idris 2 API.
 installApi : HasIO io => Version -> io ()
 installApi version = do
-  0 <- System.system "make install-\{maybeWithSrc}"
+  let proposedBuildPrefix = buildPrefix version
+  Just buildPrefix <- pathExpansion proposedBuildPrefix
+    | Nothing => exitError "Could not resolve build prefix directory: \{proposedBuildPrefix}."
+  0 <- System.system "PREFIX=\"\{buildPrefix}\"make install-\{maybeWithSrc}"
     | _ => exitError "Failed to install Idris2 API package."
   putStrLn ""
   putStrLn "Idris2 API package successfully installed."
