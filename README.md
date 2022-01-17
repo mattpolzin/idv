@@ -50,8 +50,6 @@ Usage: idv <subcommand>
      - select system                     select the system Idris 2 install (generally ~/.idris2/bin/idris2).
 ```
 
-Keep in mind that the LSP will need to be integrated with your editor of choice even if you manage its install with `idv`. See the [README](https://github.com/idris-community/idris2-lsp/blob/main/README.md) for details, but you won't need to perform the install steps as described there.
-
 For example, if you have run `idv install 0.3.0` then you can switch back and forth between the 0.3.0 version and a version of Idris 2 you've installed from source with the HEAD of the main branch checked out as follows:
 ```shell
 $ idv select 0.3.0
@@ -67,6 +65,8 @@ System copy of Idris 2 selected.
 $ idris2 --version
 Idris 2, version 0.5.1-b03395deb
 ```
+
+Keep in mind that the LSP will need to be integrated with your editor of choice even if you manage its install with `idv`. See the [README](https://github.com/idris-community/idris2-lsp/blob/main/README.md) for details, but you won't need to perform the install steps as described there.
 
 ## Wishlist
 Before helping out, take a quick look at the [contribution guidelines](CONTRIBUTING.md).
