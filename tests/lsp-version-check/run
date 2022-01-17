@@ -1,0 +1,4 @@
+rm -rf build
+
+$1 install 0.3.0 --lsp
+
