@@ -331,6 +331,13 @@ selectSystemCommand = do
     | Nothing => exitError "Could not resolve symlinked location: \{proposedIdrisSymlinked}."
   True <- symlink installedIdris linkedIdris
     | False => exitError "Failed to create symlink for Idris 2 system install."
+  whenJust !systemIdrisLspPath $ \installedLsp => do
+    let proposedLspSymlinked = idrisLspSymlinkedPath
+    Just linkedLsp <- pathExpansion proposedLspSymlinked
+      | Nothing => exitError "Could not resolve symlinked LSP location: \{proposedLspSymlinked}."
+    True <- symlink installedLsp linkedLsp
+      | False => exitError "Failed to create symlink for Idris 2 LSP system install."
+    pure ()
   exitSuccess "System copy of Idris 2 selected."
 
 ||| Select the given version and print messages to the effect of
