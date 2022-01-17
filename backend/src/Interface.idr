@@ -322,37 +322,44 @@ selectCommand version = do
     | Left err => exitError err
   exitSuccess "Idris 2 version \{version} selected."
 
+selectSystem : HasIO io => io (Either String ())
+selectSystem = do
+  Right () <- unselect
+    | Left err => pure $ Left err
+  let proposedIdrisSymlinked = idrisSymlinkedPath
+  Just installedIdris <- systemIdrisPath
+    | Nothing => pure $ Left "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
+  Just linkedIdris <- pathExpansion proposedIdrisSymlinked
+    | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedIdrisSymlinked}."
+  True <- symlink installedIdris linkedIdris
+    | False => pure $ Left "Failed to create symlink for Idris 2 system install."
+  case !systemIdrisLspPath of
+       Nothing => pure $ Right ()
+       Just installedLsp => do
+          let proposedLspSymlinked = idrisLspSymlinkedPath
+          Just linkedLsp <- pathExpansion proposedLspSymlinked
+            | Nothing => pure $ Left "Could not resolve symlinked LSP location: \{proposedLspSymlinked}."
+          True <- symlink installedLsp linkedLsp
+            | False => pure $ Left "Failed to create symlink for Idris 2 LSP system install."
+          pure $ Right ()
+
 export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
-  Right () <- unselect
+  Right () <- selectSystem
     | Left err => exitError err
-  let proposedIdrisSymlinked = idrisSymlinkedPath
-  Just installedIdris <- systemIdrisPath
-    | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
-  Just linkedIdris <- pathExpansion proposedIdrisSymlinked
-    | Nothing => exitError "Could not resolve symlinked location: \{proposedIdrisSymlinked}."
-  True <- symlink installedIdris linkedIdris
-    | False => exitError "Failed to create symlink for Idris 2 system install."
-  whenJust !systemIdrisLspPath $ \installedLsp => do
-    let proposedLspSymlinked = idrisLspSymlinkedPath
-    Just linkedLsp <- pathExpansion proposedLspSymlinked
-      | Nothing => exitError "Could not resolve symlinked LSP location: \{proposedLspSymlinked}."
-    True <- symlink installedLsp linkedLsp
-      | False => exitError "Failed to create symlink for Idris 2 LSP system install."
-    pure ()
   exitSuccess "System copy of Idris 2 selected."
 
 ||| Select the given version and print messages to the effect of
 ||| failing to switch _back_ to that version if unsuccessful.
-switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io ()
+switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io (Either String ())
 switchBack actionMsg prevVersion = do
   Right True <- isInstalled prevVersion
-    | Right False => selectSystemCommand
-    | Left err    => exitError err
+    | Right False => selectSystem
+    | Left err    => pure $ Left err
   Right () <- selectVersion prevVersion
-  | Left err => exitError "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"
-  pure ()
+    | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"
+  pure $ Right ()
 
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 export
@@ -368,8 +375,10 @@ installAPICommand version = do
   Just _ <- inDir (relativeCheckoutPath Idris) (installApi version)
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
-  whenJust selectedVersion $
-    switchBack "installed Idris 2 API version \{version} package"
+  whenJust selectedVersion $ \prevVersion =>
+    case !(switchBack "installed Idris 2 API version \{version} package" prevVersion) of
+         Right () => pure ()
+         Left err => exitError err
 
 ||| Install the Idris 2 LSP (and the related version of Idris, if needed).
 export
@@ -385,8 +394,10 @@ installLSPCommand version = do
       | Left err => exitError err
     pure ()
   buildAndInstallLsp version
-  whenJust selectedVersion $
-    switchBack "installed Idris 2 LSP for version \{version}"
+  whenJust selectedVersion $ \prevVersion =>
+    case !(switchBack "installed Idris 2 LSP for version \{version}" prevVersion) of
+         Right () => pure ()
+         Left err => exitError err
 
   where
     ||| Select the requested Idris version and verify it has
