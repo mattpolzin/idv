@@ -40,8 +40,8 @@ relativeBinPath : String
 relativeBinPath = "bin"
 
 export
-relativeLibPath : String
-relativeLibPath = "lib"
+relativeLibPath : Version -> String
+relativeLibPath version = "idris2-\{dropPrerelease version}"
 
 idrisBinName : String
 idrisBinName = "idris2"
@@ -84,14 +84,15 @@ versionPath version =
 export
 libPath : Version -> String
 libPath version =
-  idvLocation </> relativeVersionsPath </> (relativeVersionDirName version) </> relativeLibPath
+  idvLocation </> relativeVersionsPath </> (relativeVersionDirName version) </> (relativeLibPath version)
 
 ||| The path where the Idris 2 API package is installed for the
 ||| version (if it has been installed).
+||| e.g. ~/.idv/versions/0_4_0/idris2-0.4.0/idris2-0.4.0
 export
 idrisApiLibPath : Version -> String
 idrisApiLibPath version =
-  (libPath version) </> (relativeVersionDirName version)
+  (libPath version) </> (relativeLibPath version)
 
 ||| The build prefix (PREFIX) to use when making and installing the
 ||| the given version of the Idris 2 compiler.

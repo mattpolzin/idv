@@ -323,12 +323,12 @@ selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
   Right () <- unselect
     | Left err => exitError err
-  let proposedSymlinked = idrisSymlinkedPath
-  Just installed <- systemIdrisPath
+  let proposedIdrisSymlinked = idrisSymlinkedPath
+  Just installedIdris <- systemIdrisPath
     | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
-  Just linked <- pathExpansion proposedSymlinked
-    | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
-  True <- symlink installed linked
+  Just linkedIdris <- pathExpansion proposedIdrisSymlinked
+    | Nothing => exitError "Could not resolve symlinked location: \{proposedIdrisSymlinked}."
+  True <- symlink installedIdris linkedIdris
     | False => exitError "Failed to create symlink for Idris 2 system install."
   exitSuccess "System copy of Idris 2 selected."
 
@@ -383,8 +383,10 @@ installLSPCommand version = do
     selectIdrisWithAPI : io Bool
     selectIdrisWithAPI = do
       Right () <- selectVersion version
-        | _ => pure False
+        | _ => do putStrLn "Idris 2 version \{version} will be installed prior to installing the LSP server."
+                  pure False
       case !(hasApiInstalled version) of
            Right True => pure True
-           _ => pure False
+           _ => do putStrLn "The Idris 2 API for version \{version} will be installed prior to installing the LSP server."
+                   pure False
 
