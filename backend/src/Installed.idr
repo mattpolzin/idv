@@ -49,6 +49,15 @@ isInstalled version = do
          Nothing      => Right False
          Just version => Right True
 
+||| Check if the given Idris version has the Idris 2 API package installed.
+export
+hasApiInstalled : HasIO io => Version -> io (Either String Bool)
+hasApiInstalled version = do
+  versionInstalled <- isInstalled version
+  Just libPath <- pathExpansion (idrisApiLibPath version)
+    | Nothing => pure $ Left "could not locate Idris 2 libdir."
+  pure $ Right !(exists libPath)
+
 ||| Remove the symlink that points to the "selected" Idris 2 executable.
 export
 unselect : HasIO io => io (Either String ())

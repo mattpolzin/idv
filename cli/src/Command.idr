@@ -42,6 +42,11 @@ idv = MkCommand
                                 If the specified version of Idris 2 is already installed, \
                                 the API package will be added under the specified installation.
                                 """)
+          , "--lsp" ::= (flag $ """
+                                Install the Idris 2 LSP after installing Idris 2.
+                                If the specified version of Idris 2 is already installed, \
+                                the LSP server will be added under the specified installation.
+                                """)
           ]
       , arguments = version
       }

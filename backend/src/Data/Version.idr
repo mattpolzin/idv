@@ -41,6 +41,12 @@ Ord Version where
 version : (tag : String) -> (prereleaseIdentifier : Maybe String) -> Vect 3 Nat -> Version
 version tag pre [x, y, z] = V x y z pre tag
 
+||| Drop any pre-release info from the Version. Note that this does
+||| not discard the tag if one is stored on the Version.
+export
+dropPrerelease : Version -> Version
+dropPrerelease (V major minor patch _ tag) = (V major minor patch Nothing tag)
+
 ||| Parse a semantic version string.
 export
 parseVersion : String -> Maybe Version
