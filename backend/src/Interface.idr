@@ -3,6 +3,7 @@ module Interface
 import Data.List
 import Data.Maybe
 import Data.Version
+import Data.String
 import System
 import System.Console.Extra
 import System.Directory
@@ -92,7 +93,7 @@ checkoutIfAvailable target version = do
         checkoutLSP = do
           let desiredBranchName = idrisLspBranchName version
           availableBranches <- listBranches
-          case List.find (== desiredBranchName) availableBranches of
+          case List.find (desiredBranchName `isInfixOf`) availableBranches of
                Nothing => pure $ Left "The LSP does not have a branch for version \{version} Available branches: \{availableBranches}."
                (Just resolvedBranch) => do 
                  True <- checkout resolvedBranch
