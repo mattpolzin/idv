@@ -13,6 +13,7 @@ import System.File.Extra
 import Git
 import public IdvPaths
 import Installed
+import Interp
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -83,7 +84,7 @@ checkoutIfAvailable version = do
             updateMainBranch
             availableVersions <- listVersions
             case List.find (== version) availableVersions of
-                 Nothing => pure $ Left "Version \{show version} is not one of the available versions: \{show availableVersions}."
+                 Nothing => pure $ Left "Version \{version} is not one of the available versions: \{availableVersions}."
                  (Just resolvedVersion) => do 
                    True <- checkout resolvedVersion.tag
                      | False => pure $ Left "Could not check out requested version of Idris2."
@@ -93,7 +94,7 @@ checkoutIfAvailable version = do
 bootstrapBuild : HasIO io => (resolvedVersion : Version) -> (buildPrefix : String) -> io ()
 bootstrapBuild version buildPrefix = do
   True <- go
-    | False => exitError "Failed to build Idris2 version \{show version}."
+    | False => exitError "Failed to build Idris2 version \{version}."
   pure ()
     where
       chezExec : io (Maybe String)
@@ -127,14 +128,28 @@ install : HasIO io
        -> (buildPrefix : String) 
        -> io ()
 install installOver installedDir version buildPrefix = do
-  let executableOverride : String = if installOver
-                                       then "IDRIS2_BOOT=\"\{installedDir}\""
-                                       else ""
-  0 <- System.system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
-    | _ => exitError "Failed to install Idris2 \{show version}."
+  0 <- installCompiler
+    | _ => exitError "Failed to install Idris2 \{version}."
+  -- Idris2 v0.4.0 was when install-with-src was added.
+  when (version >= (V 0 4 0 Nothing "")) $ do
+    0 <- installLibsWithSrc
+      | _ => exitError "Failed to install Idris2 libraries \{version}."
+    pure ()
   putStrLn ""
-  putStrLn "Idris2 version \{show version} successfully installed to \{buildPrefix}."
+  putStrLn "Idris2 version \{version} successfully installed to \{buildPrefix}."
   pure ()
+
+  where
+    executableOverride : String
+    executableOverride = if installOver
+                            then "IDRIS2_BOOT=\"\{installedDir}\""
+                            else ""
+
+    installCompiler : io Int
+    installCompiler = System.system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
+
+    installLibsWithSrc : io Int
+    installLibsWithSrc = System.system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install-with-src-libs"
 
 buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
@@ -159,13 +174,13 @@ buildAndInstall version cleanAfter = do
       -- clean up
       ignore $ clean
   unless (isJust moveDirRes) $ 
-    exitError "Failed to install version \{show version}."
+    exitError "Failed to install version \{version}."
 
 ||| Uninstall the given version. Assumes that version exists.
 uninstall : HasIO io => Version -> io ()
 uninstall version = do
   Just installPath <- pathExpansion $ versionPath version
-    | Nothing => exitError "Failed to locate an install path for version \{show version}."
+    | Nothing => exitError "Failed to locate an install path for version \{version}."
   putStrLn "uninstalling from \{installPath}..."
   -- TODO: make cross-platform remove recursive. current standard lib options won't do it.
   0 <- System.system $ "rm -rf " ++ installPath
@@ -174,13 +189,20 @@ uninstall version = do
 
 ||| Assumes the current directory is an Idris 2 repository. Runs only
 ||| the install of the Idris 2 API.
-installApi : HasIO io => io ()
-installApi = do
-  0 <- System.system "make install-api"
+installApi : HasIO io => Version -> io ()
+installApi version = do
+  0 <- System.system "make install-\{maybeWithSrc}"
     | _ => exitError "Failed to install Idris2 API package."
   putStrLn ""
   putStrLn "Idris2 API package successfully installed."
   ignore $ clean
+
+  where
+    -- Idris2 v0.4.0 was when install-with-src was added.
+    maybeWithSrc : String
+    maybeWithSrc = if version >= (V 0 4 0 Nothing "")
+                      then "with-src-api"
+                      else "api"
 
 ||| Select the given version if it is installed (as in set it as the version used
 ||| when the `idris2` command is executed). Then checkout that same version in the
@@ -211,13 +233,13 @@ listVersionsCommand = do
   let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
   let selectedInstalled = buildSelectedFn selectedVersion
   whenJust systemInstall $ \systemVersion => do
-    putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{show systemVersion})"
+    putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{systemVersion})"
   traverse_ putStrLn $ printVersion . selectedInstalled <$> zipMatch installedVersions remoteVersions
     where
       printVersion : (Bool, Maybe Version, Maybe Version) -> String
-      printVersion (sel, Just v, Just _)  = (if sel then "* " else "  ") ++ "\{show v}  (installed)"
+      printVersion (sel, Just v, Just _)  = (if sel then "* " else "  ") ++ "\{v}  (installed)"
       printVersion (_, Nothing, Just v) = "  " ++ show v
-      printVersion (sel, Just v, Nothing) = (if sel then "* " else "  ") ++ "\{show v}  (local only)"
+      printVersion (sel, Just v, Nothing) = (if sel then "* " else "  ") ++ "\{v}  (local only)"
       printVersion (_, Nothing, Nothing) = ""
 
       buildSelectedFn : (selectedVersion : Maybe Version) 
@@ -236,18 +258,18 @@ uninstallCommand : HasIO io => (version : Version) -> io ()
 uninstallCommand version =
   case !(isInstalled version) of
        Left err    => exitError err
-       Right False => exitError "Version \{show version} is not installed."
+       Right False => exitError "Version \{version} is not installed."
        Right True  =>
-         when !(confirm "Are you sure you want to uninstall version \{show version}?") $ do
+         when !(confirm "Are you sure you want to uninstall version \{version}?") $ do
            uninstall version
-           exitSuccess "Uninstalled version \{show version}."
+           exitSuccess "Uninstalled version \{version}."
 
 export
 selectCommand : HasIO io => (version : Version) -> io ()
 selectCommand version = do
   Right () <- selectVersion version
     | Left err => exitError err
-  exitSuccess "Idris 2 version \{show version} selected."
+  exitSuccess "Idris 2 version \{version} selected."
 
 export
 selectSystemCommand : HasIO io => io ()
@@ -274,7 +296,7 @@ installAPICommand version = do
     Right () <- selectVersion version
       | Left err => exitError err
     pure ()
-  Just _ <- inDir relativeCheckoutPath installApi
+  Just _ <- inDir relativeCheckoutPath (installApi version)
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
   whenJust selectedVersion $ \version => do
@@ -282,6 +304,6 @@ installAPICommand version = do
       | Right False => selectSystemCommand
       | Left err    => exitError err
     Right () <- selectVersion version
-      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{show version} with error: \{err}"
+      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{version} with error: \{err}"
     pure ()
 
