@@ -43,6 +43,15 @@ export
 relativeLibPath : Version -> String
 relativeLibPath version = "idris2-\{dropPrerelease version}"
 
+||| Prior to version 0.4.0, the Idris 2 API package would be installed
+||| at `relativeLibPath </> "idris2"`. Starting with version 0.4.0, it
+||| is installed at a versioned path (so `relativeLibPath </> relativeLibPath`).
+relativeIdris2ApiLibPath : Version -> String
+relativeIdris2ApiLibPath version =
+  if version < (V 0 4 0 Nothing "")
+     then "idris2"
+     else relativeLibPath version
+
 idrisBinName : String
 idrisBinName = "idris2"
 
@@ -92,7 +101,7 @@ libPath version =
 export
 idrisApiLibPath : Version -> String
 idrisApiLibPath version =
-  (libPath version) </> (relativeLibPath version)
+  (libPath version) </> (relativeIdris2ApiLibPath version)
 
 ||| The build prefix (PREFIX) to use when making and installing the
 ||| the given version of the Idris 2 compiler.
