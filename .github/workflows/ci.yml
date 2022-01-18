@@ -21,6 +21,6 @@ jobs:
           ~/.idv/bin/idv install 0.5.1 --lsp && \
           ~/.idv/bin/idv select 0.5.1 && \
           idris2 --version && \
-          idris2-lsp --version
+          # idris2-lsp --version (can't run this yet, only available in LSP as of newer version).
           # ^ just checking that all of the above run and exit successfully.
 
