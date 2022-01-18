@@ -18,7 +18,7 @@ jobs:
         run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
       - name: Install w/ LSP
         run: |
-          echo "~/.idv/bin" >> $GITHUB_PATH && \
+          echo ~/.idv/bin >> $GITHUB_PATH && \
           idv install 0.5.1 --lsp && \
           idv select 0.5.1 && \
           idris2 --version # && \
