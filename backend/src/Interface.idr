@@ -297,7 +297,7 @@ listVersionsCommand = do
       printVersion (sel, Just v, extras) =
         let prefixStr = if sel then "*" else " "
             verStr    = show v 
-            extraStr  = if (length extras > 0) then "(\{join " + " extras})" else ""
+            extraStr  = if (length extras > 0) then " (\{join " + " extras})" else ""
         in  join " " [prefixStr, verStr, extraStr]
 
       buildSelectedFn : (selectedVersion : Maybe Version) 
