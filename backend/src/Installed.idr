@@ -49,11 +49,17 @@ isInstalled version = do
          Nothing      => Right False
          Just version => Right True
 
+export
+hasLspInstalled : HasIO io => Version -> io (Either String Bool)
+hasLspInstalled version = do
+  Just lspPath <- pathExpansion (installedLspPath version)
+    | Nothing => pure $ Left "could not locate Idris 2 bin directory."
+  pure $ Right !(exists lspPath)
+
 ||| Check if the given Idris version has the Idris 2 API package installed.
 export
 hasApiInstalled : HasIO io => Version -> io (Either String Bool)
 hasApiInstalled version = do
-  versionInstalled <- isInstalled version
   Just libPath <- pathExpansion (idrisApiLibPath version)
     | Nothing => pure $ Left "could not locate Idris 2 libdir."
   pure $ Right !(exists libPath)

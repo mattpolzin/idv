@@ -309,7 +309,9 @@ listVersionsCommand = do
       getExtras version = do
         let ifApi : Bool -> Maybe String = (\api => if api then Just "api" else Nothing)
         hasApi <- either (const Nothing) ifApi <$> hasApiInstalled version
-        pure $ catMaybes [hasApi]
+        let ifLsp : Bool -> Maybe String = (\lsp => if lsp then Just "LSP" else Nothing)
+        hasLsp <- either (const Nothing) ifLsp <$> hasLspInstalled version
+        pure $ catMaybes [hasApi, hasLsp]
 
       ||| Attaches a list of additional info strings for each version.
       getInstalls : (Bool, Maybe Version, Maybe Version) -> io (Bool, Maybe Version, List String)
