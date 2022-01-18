@@ -4,6 +4,7 @@ import Data.List
 import Data.Maybe
 import Data.Version
 import Data.String
+import Data.String.Extra
 import System
 import System.Console.Extra
 import System.Directory
@@ -15,6 +16,8 @@ import Git
 import public IdvPaths
 import Installed
 import Interp
+
+%default covering
 
 exitError : HasIO io => String -> io a
 exitError err = do
@@ -283,20 +286,38 @@ listVersionsCommand = do
   selectedVersion <- getSelectedVersion
   let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
   let selectedInstalled = buildSelectedFn selectedVersion
+  let versionInfo = zipMatch installedVersions remoteVersions
   whenJust systemInstall $ \systemVersion => do
     putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{systemVersion})"
-  traverse_ putStrLn $ printVersion . selectedInstalled <$> zipMatch installedVersions remoteVersions
+  let printVersionLn = map printVersion . getInstalls . selectedInstalled
+  traverse_ (putStrLn <=< printVersionLn) versionInfo
     where
-      printVersion : (Bool, Maybe Version, Maybe Version) -> String
-      printVersion (sel, Just v, Just _)  = (if sel then "* " else "  ") ++ "\{v}  (installed)"
-      printVersion (_, Nothing, Just v) = "  " ++ show v
-      printVersion (sel, Just v, Nothing) = (if sel then "* " else "  ") ++ "\{v}  (local only)"
-      printVersion (_, Nothing, Nothing) = ""
+      printVersion : (Bool, Maybe Version, List String) -> String
+      printVersion (_, Nothing, _) = ""
+      printVersion (sel, Just v, extras) =
+        let prefixStr = if sel then "*" else " "
+            verStr    = show v 
+            extraStr  = if (length extras > 0) then "(\{join " + " extras})" else ""
+        in  join " " [prefixStr, verStr, extraStr]
 
       buildSelectedFn : (selectedVersion : Maybe Version) 
                      -> (Maybe Version, Maybe Version) 
                      -> (Bool, Maybe Version, Maybe Version)
       buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
+
+      getExtras : Version -> io (List String)
+      getExtras version = do
+        let ifApi : Bool -> Maybe String = (\api => if api then Just "api" else Nothing)
+        hasApi <- either (const Nothing) ifApi <$> hasApiInstalled version
+        pure $ catMaybes [hasApi]
+
+      ||| Attaches a list of additional info strings for each version.
+      getInstalls : (Bool, Maybe Version, Maybe Version) -> io (Bool, Maybe Version, List String)
+      getInstalls (sel, (Just v), (Just _)) = pure (sel, Just v, "installed" :: !(getExtras v))
+      getInstalls (sel, Nothing, (Just v)) = pure (sel, Just v, [])
+      getInstalls (sel, (Just v), Nothing) = pure (sel, Just v, "local only" :: !(getExtras v))
+      getInstalls (sel, Nothing, Nothing) = pure (sel, Nothing, [])
+
 
 export
 installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
