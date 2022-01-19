@@ -21,7 +21,7 @@ jobs:
           export PATH="$HOME/.idv/bin:$PATH"
           idv install 0.5.1 --lsp
           idv select 0.5.1
-          [[ "$(idris2 --version)" == 'Idris 2, version 0.5.1' ]]
-          [[ "$(which idris2-lsp)" != '' ]]
+          [ "$(idris2 --version)" == 'Idris 2, version 0.5.1' ]
+          [ "$(which idris2-lsp)" != '' ]
           # idris2-lsp --version (can't run this yet, only available in LSP as of newer version).
 
