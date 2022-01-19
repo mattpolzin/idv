@@ -16,7 +16,7 @@ jobs:
 #        run: make && make install
 #      - name: Run Golden tests
 #        run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
-#      - name: Install w/ LSP
+      - name: Install w/ LSP
         run: |
           echo "$HOME"
           echo "$HOME/.idv/bin" >> $GITHUB_PATH && \
