@@ -8,20 +8,22 @@ jobs:
     container: mattpolzin2/idris-docker:nightly
 
     steps:
-      - name: Install Dependencies
-        run: apt-get update && apt-get -y install git
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Build & Install Idv
-        run: make && make install
-      - name: Run Golden tests
-        run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
-      - name: Install w/ LSP
+#      - name: Install Dependencies
+#        run: apt-get update && apt-get -y install git
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Build & Install Idv
+#        run: make && make install
+#      - name: Run Golden tests
+#        run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
+#      - name: Install w/ LSP
         run: |
+          echo "$HOME"
           echo "$HOME/.idv/bin" >> $GITHUB_PATH && \
-          idv install 0.5.1 --lsp && \
-          idv select 0.5.1 && \
-          idris2 --version # && \
+          echo $PATH
+#          idv install 0.5.1 --lsp && \
+#          idv select 0.5.1 && \
+#          idris2 --version # && \
           # idris2-lsp --version (can't run this yet, only available in LSP as of newer version).
           # ^ just checking that all of the above run and exit successfully.
 
