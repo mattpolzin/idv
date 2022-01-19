@@ -21,6 +21,7 @@ jobs:
           echo "$HOME"
           export PATH="$HOME/.idv/bin:$PATH"
           echo $PATH
+          idv list
 #          idv install 0.5.1 --lsp && \
 #          idv select 0.5.1 && \
 #          idris2 --version # && \
