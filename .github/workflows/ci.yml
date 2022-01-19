@@ -8,12 +8,12 @@ jobs:
     container: mattpolzin2/idris-docker:nightly
 
     steps:
-#      - name: Install Dependencies
-#        run: apt-get update && apt-get -y install git
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#      - name: Build & Install Idv
-#        run: make && make install
+      - name: Install Dependencies
+        run: apt-get update && apt-get -y install git
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build & Install Idv
+        run: make && make install
 #      - name: Run Golden tests
 #        run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
       - name: Install w/ LSP
