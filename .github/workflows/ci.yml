@@ -19,7 +19,7 @@ jobs:
       - name: Install w/ LSP
         run: |
           echo "$HOME"
-          echo "$HOME/.idv/bin" >> $GITHUB_PATH && \
+          export PATH="$HOME/.idv/bin:$PATH"
           echo $PATH
 #          idv install 0.5.1 --lsp && \
 #          idv select 0.5.1 && \
