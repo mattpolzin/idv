@@ -23,7 +23,7 @@ jobs:
           idv select 0.5.1
           echo "$(idris2 --version)"
           echo "$(which idris2-lsp)"
-#          test "$(idris2 --version)" = 'Idris 2, version 0.5.1'
+          test "$(idris2 --version)" = 'Idris 2, version 0.5.1-nightly'
           # test "$(which idris2-lsp)" != ''
           # idris2-lsp --version (can't run this yet, only available in LSP as of newer version).
 
