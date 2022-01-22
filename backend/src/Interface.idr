@@ -3,6 +3,7 @@ module Interface
 import Data.List
 import Data.Maybe
 import Data.Version
+import Data.String
 import System
 import System.Console.Extra
 import System.Directory
@@ -37,14 +38,14 @@ createVersionsDir version = do
     | False => exitError "Could not create install directory for new Idris2 version."
   pure ()
 
-||| Assumes the current working directory is an Idris repository.
+||| Assumes the current working directory is a git repository.
 updateMainBranch : HasIO io => io ()
 updateMainBranch = do
   True <- checkoutAndPullBranch "main"
     | False => exitError "Could not update Idris2 repository prior to building a new version."
   pure ()
 
-||| Assumes the current working directory is an Idris repository.
+||| Assumes the current working directory is a git repository with a clean target in the Makefile.
 clean : HasIO io => io Bool
 clean = [ res == 0 | res <- System.system "make clean" ]
 
@@ -73,22 +74,43 @@ cleanAndBuild version installedDir buildPrefix = do
 ||| Check out the given version if available (in the checkout folder
 ||| in preparation for building against a particular version of the
 ||| Idris 2 source code).
-checkoutIfAvailable : HasIO io => Version -> io (Either String ())
-checkoutIfAvailable version = do
+checkoutIfAvailable : HasIO io => BuildTarget -> Version -> io (Either String ())
+checkoutIfAvailable target version = do
   fromMaybe (Left "Failed to switch to checkout directory.") <$>
     changeDirAndCheckout
       where
+        checkoutIdris : io (Either String ())
+        checkoutIdris = do
+          availableVersions <- listVersions
+          case List.find (== version) availableVersions of
+               Nothing => pure $ Left "Version \{version} is not one of the available versions: \{availableVersions}."
+               (Just resolvedVersion) => do 
+                 True <- checkout resolvedVersion.tag
+                   | False => pure $ Left "Could not check out requested version of Idris2."
+                 pure $ Right ()
+
+        checkoutLSP : io (Either String ())
+        checkoutLSP = do
+          let desiredBranchName = idrisLspBranchName version
+          availableBranches <- listBranches
+          case List.find (desiredBranchName `isInfixOf`) availableBranches of
+               Nothing => pure $ Left "The LSP does not have a branch for version \{version} Available branches: \{availableBranches}."
+               (Just resolvedBranch) => do 
+                 True <- checkout resolvedBranch
+                   | False => pure $ Left "Could not check out requested version of the Idris2 LSP."
+                 pure $ Right ()
+
+        checkoutTarget : io (Either String ())
+        checkoutTarget =
+          case target of
+               Idris => checkoutIdris
+               LSP   => checkoutLSP
+
         changeDirAndCheckout : io (Maybe (Either String ()))
         changeDirAndCheckout =
-          inDir relativeCheckoutPath $ do
+          inDir (relativeCheckoutPath target) $ do
             updateMainBranch
-            availableVersions <- listVersions
-            case List.find (== version) availableVersions of
-                 Nothing => pure $ Left "Version \{version} is not one of the available versions: \{availableVersions}."
-                 (Just resolvedVersion) => do 
-                   True <- checkout resolvedVersion.tag
-                     | False => pure $ Left "Could not check out requested version of Idris2."
-                   pure $ Right ()
+            checkoutTarget
 
 ||| Assumes the current working directory is an Idris repository.
 bootstrapBuild : HasIO io => (resolvedVersion : Version) -> (buildPrefix : String) -> io ()
@@ -153,11 +175,12 @@ install installOver installedDir version buildPrefix = do
 
 buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
-  True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
+  let target = Idris
+  True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris2 repository into local folder."
-  Right _ <- checkoutIfAvailable version
+  Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
-  moveDirRes <- inDir relativeCheckoutPath $ do
+  moveDirRes <- inDir (relativeCheckoutPath target) $ do
     let proposedInstalledDir = installedIdrisPath version
     let proposedBuildPrefix = buildPrefix version
     Just installedDir <- pathExpansion proposedInstalledDir
@@ -176,6 +199,31 @@ buildAndInstall version cleanAfter = do
   unless (isJust moveDirRes) $ 
     exitError "Failed to install version \{version}."
 
+buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
+buildAndInstallLsp version = do
+  let target = LSP
+  True <- cloneIfNeeded idrisLspRepoURL (relativeCheckoutPath target)
+    | False => exitError "Failed to clone Idris 2 LSP repository into local folder."
+  Right _ <- checkoutIfAvailable target version
+    | Left err => exitError err
+  moveDirRes <- inDir (relativeCheckoutPath target) $ do
+    let proposedInstalledDir = installedLspPath version
+    let proposedBuildPrefix = buildPrefix version
+    Just installedDir <- pathExpansion proposedInstalledDir
+      | Nothing => exitError "Could not resolve install directory: \{proposedInstalledDir}."
+    Just buildPrefix <- pathExpansion proposedBuildPrefix
+      | Nothing => exitError "Could not resolve build prefix directory: \{proposedBuildPrefix}."
+    0 <- installLsp buildPrefix
+      | _ => exitError "Failed to build & install LSP."
+    -- clean up
+    ignore $ clean
+  unless (isJust moveDirRes) $ 
+    exitError "Failed to install LSP for version \{version}."
+
+  where
+    installLsp : (buildPrefix : String) -> io Int
+    installLsp buildPrefix = System.system "PREFIX=\"\{buildPrefix}\" make install"
+
 ||| Uninstall the given version. Assumes that version exists.
 uninstall : HasIO io => Version -> io ()
 uninstall version = do
@@ -191,7 +239,10 @@ uninstall version = do
 ||| the install of the Idris 2 API.
 installApi : HasIO io => Version -> io ()
 installApi version = do
-  0 <- System.system "make install-\{maybeWithSrc}"
+  let proposedBuildPrefix = buildPrefix version
+  Just buildPrefix <- pathExpansion proposedBuildPrefix
+    | Nothing => exitError "Could not resolve build prefix directory: \{proposedBuildPrefix}."
+  0 <- System.system "PREFIX=\"\{buildPrefix}\" make install-\{maybeWithSrc}"
     | _ => exitError "Failed to install Idris2 API package."
   putStrLn ""
   putStrLn "Idris2 API package successfully installed."
@@ -211,7 +262,7 @@ selectAndCheckout : HasIO io => (version : Version) -> io Bool
 selectAndCheckout version = do
   Right _ <- selectVersion version
     | Left _  => pure False
-  Right _ <- checkoutIfAvailable version
+  Right _ <- checkoutIfAvailable Idris version
     | Left _ => pure False
   pure True
 
@@ -222,9 +273,9 @@ selectAndCheckout version = do
 export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
-  True <- cloneIfNeeded idrisRepoURL relativeCheckoutPath
+  True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath Idris)
     | False => exitError "Failed to clone Idris2 repository into local folder."
-  Just remoteVersions <- inDir relativeCheckoutPath fetchAndListVersions
+  Just remoteVersions <- inDir (relativeCheckoutPath Idris) fetchAndListVersions
     | Nothing => exitError "Failed to retrieve remote versions."
   Just installedVersions <- Installed.listVersions
     | Nothing => exitError "Failed to list local versions."
@@ -271,19 +322,44 @@ selectCommand version = do
     | Left err => exitError err
   exitSuccess "Idris 2 version \{version} selected."
 
+selectSystem : HasIO io => io (Either String ())
+selectSystem = do
+  Right () <- unselect
+    | Left err => pure $ Left err
+  let proposedIdrisSymlinked = idrisSymlinkedPath
+  Just installedIdris <- systemIdrisPath
+    | Nothing => pure $ Left "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
+  Just linkedIdris <- pathExpansion proposedIdrisSymlinked
+    | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedIdrisSymlinked}."
+  True <- symlink installedIdris linkedIdris
+    | False => pure $ Left "Failed to create symlink for Idris 2 system install."
+  case !systemIdrisLspPath of
+       Nothing => pure $ Right ()
+       Just installedLsp => do
+          let proposedLspSymlinked = idrisLspSymlinkedPath
+          Just linkedLsp <- pathExpansion proposedLspSymlinked
+            | Nothing => pure $ Left "Could not resolve symlinked LSP location: \{proposedLspSymlinked}."
+          True <- symlink installedLsp linkedLsp
+            | False => pure $ Left "Failed to create symlink for Idris 2 LSP system install."
+          pure $ Right ()
+
 export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
-  Right () <- unselect
+  Right () <- selectSystem
     | Left err => exitError err
-  let proposedSymlinked = idrisSymlinkedPath
-  Just installed <- systemIdrisPath
-    | Nothing => exitError "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
-  Just linked <- pathExpansion proposedSymlinked
-    | Nothing => exitError "Could not resolve symlinked location: \{proposedSymlinked}."
-  True <- symlink installed linked
-    | False => exitError "Failed to create symlink for Idris 2 system install."
   exitSuccess "System copy of Idris 2 selected."
+
+||| Select the given version and print messages to the effect of
+||| failing to switch _back_ to that version if unsuccessful.
+switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io (Either String ())
+switchBack actionMsg prevVersion = do
+  Right True <- isInstalled prevVersion
+    | Right False => selectSystem
+    | Left err    => pure $ Left err
+  Right () <- selectVersion prevVersion
+    | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"
+  pure $ Right ()
 
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 export
@@ -296,14 +372,43 @@ installAPICommand version = do
     Right () <- selectVersion version
       | Left err => exitError err
     pure ()
-  Just _ <- inDir relativeCheckoutPath (installApi version)
+  Just _ <- inDir (relativeCheckoutPath Idris) (installApi version)
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
-  whenJust selectedVersion $ \version => do
-    Right True <- isInstalled version
-      | Right False => selectSystemCommand
-      | Left err    => exitError err
+  whenJust selectedVersion $ \prevVersion =>
+    case !(switchBack "installed Idris 2 API version \{version} package" prevVersion) of
+         Right () => pure ()
+         Left err => exitError err
+
+||| Install the Idris 2 LSP (and the related version of Idris, if needed).
+export
+installLSPCommand : HasIO io => (version : Version) -> io ()
+installLSPCommand version = do
+  when (version < (V 0 4 0 Nothing "")) $
+    exitError "The Idris 2 LSP is not supported prior to Idris 2 v0.4.0."
+  selectedVersion <- getSelectedVersion
+  -- don't reinstall Idris 2 and its API unless needed:
+  unless !selectIdrisWithAPI $ do
+    installAPICommand version
     Right () <- selectVersion version
-      | Left err => exitError "Successfully installed Idris 2 API package but failed to switch back to Idris version \{version} with error: \{err}"
+      | Left err => exitError err
     pure ()
+  buildAndInstallLsp version
+  whenJust selectedVersion $ \prevVersion =>
+    case !(switchBack "installed Idris 2 LSP for version \{version}" prevVersion) of
+         Right () => pure ()
+         Left err => exitError err
+
+  where
+    ||| Select the requested Idris version and verify it has
+    ||| the API installed.
+    selectIdrisWithAPI : io Bool
+    selectIdrisWithAPI = do
+      Right () <- selectVersion version
+        | _ => do putStrLn "Idris 2 version \{version} will be installed prior to installing the LSP server."
+                  pure False
+      case !(hasApiInstalled version) of
+           Right True => pure True
+           _ => do putStrLn "The Idris 2 API for version \{version} will be installed prior to installing the LSP server."
+                   pure False
 

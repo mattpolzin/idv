@@ -41,10 +41,17 @@ export
 pull : HasIO io => io Bool
 pull = [ res == 0 | res <- ignoreOutput "git pull --tags" ]
 
+export
 listTags : HasIO io => io (List String)
 listTags = do
   tags <- readLines (limit 1000) False "git tag --list"
   pure tags
+
+export
+listBranches : HasIO io => io (List String)
+listBranches = do
+  branches <- readLines (limit 1000) False "git branch --list --all"
+  pure branches
 
 ||| List the versions for the repo in the current working directory.
 |||

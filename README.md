@@ -15,7 +15,7 @@ Because Idv will build Idris 2 from source, it has the same system requirements 
 - Chez Scheme
 - bash
 - GNU make
-- sha256sum
+- sha256sum (for some versions of Idris)
 - GMP
 
 _Ironically_, Idv is not currently available as a prebuilt binary, which means you will need to have Idris 2 installed on your system in order to build & install Idv.
@@ -43,13 +43,14 @@ Add the `bin` directory inside the chosen install location (by default, `~/.idv/
 ```shell
 Usage: idv <subcommand>
   Subcommands:
-     - list                      list all installed and available Idris 2 versions.
-     - install <version> [--api] install the given Idris 2 version and optionally also install the Idris2 API.
-     - select <version>          select the given (already installed) Idris 2 version.
-     - select system             select the system Idris 2 install (generally ~/.idris2/bin/idris2).
+     - list                              list all installed and available Idris 2 versions.
+     - install <version> [--api] [--lsp] install the given Idris 2 version and optionally
+                                         also install the Idris2 API package or the Idris2 LSP server.
+     - select <version>                  select the given (already installed) Idris 2 version.
+     - select system                     select the system Idris 2 install (generally ~/.idris2/bin/idris2).
 ```
 
-For example, if you have run `idv install 0.3.0` then you can switch back and forth between the official 0.4.0 version and a version of Idris 2 you've installed from source with the HEAD of the main branch checked out as follows:
+For example, if you have run `idv install 0.3.0` then you can switch back and forth between the 0.3.0 version and a version of Idris 2 you've installed from source with the HEAD of the main branch checked out as follows:
 ```shell
 $ idv select 0.3.0
 
@@ -62,8 +63,10 @@ $ idv select system
 System copy of Idris 2 selected.
 
 $ idris2 --version
-Idris 2, version 0.4.0-b03395deb
+Idris 2, version 0.5.1-b03395deb
 ```
+
+Keep in mind that the LSP will need to be integrated with your editor of choice even if you manage its install with `idv`. See the [README](https://github.com/idris-community/idris2-lsp/blob/main/README.md) for details, but you won't need to perform the install steps as described there.
 
 ## Wishlist
 Before helping out, take a quick look at the [contribution guidelines](CONTRIBUTING.md).

@@ -34,9 +34,14 @@ handleCommand' =
   [ const $ do putStrLn "Expected a subcommand."
                exitError idv.usage
   , "install"   ::= [ (\args => let version = args.arguments
-                                in  if args.modifiers.project "--api"
-                                       then installAPICommand version
-                                       else installCommand version True
+                                    -- Installing the LSP requires installing the API
+                                    -- just as installing the API requires installing
+                                    -- Idris.
+                                in  if args.modifiers.project "--lsp"
+                                       then installLSPCommand version
+                                       else if args.modifiers.project "--api"
+                                            then installAPICommand version
+                                            else installCommand version True
                       )
                     ]
   , "uninstall" ::= [ (\args => let version = args.arguments

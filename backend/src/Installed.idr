@@ -49,15 +49,29 @@ isInstalled version = do
          Nothing      => Right False
          Just version => Right True
 
+||| Check if the given Idris version has the Idris 2 API package installed.
+export
+hasApiInstalled : HasIO io => Version -> io (Either String Bool)
+hasApiInstalled version = do
+  versionInstalled <- isInstalled version
+  Just libPath <- pathExpansion (idrisApiLibPath version)
+    | Nothing => pure $ Left "could not locate Idris 2 libdir."
+  pure $ Right !(exists libPath)
+
 ||| Remove the symlink that points to the "selected" Idris 2 executable.
 export
 unselect : HasIO io => io (Either String ())
 unselect = do
   Just lnFile <- pathExpansion $ idrisSymlinkedPath
     | Nothing => pure $ Left "Could not resolve Idris 2 symlink path."
+  Just lnLspFile <- pathExpansion $ idrisLspSymlinkedPath
+    | Nothing => pure $ Left "Could not resolve Idris 2 LSP symlink path."
   Right () <- removeFile lnFile
     | Left FileNotFound => pure $ Right () -- no problem here, job done.
     | Left err => pure $ Left "Failed to remove symlink file (to let system Idris 2 installation take precedence): \{err}."
+  Right () <- removeFile lnLspFile
+    | Left FileNotFound => pure $ Right () -- no problem here, job done.
+    | Left err => pure $ Left "Failed to remove LSP symlink file (to let system Idris 2 installation take precedence): \{err}."
   pure $ Right ()
 
 ||| Attempt to select the given version. Fails if the version
@@ -72,15 +86,26 @@ selectVersion proposedVersion = do
        Just version => do
          Right () <- unselect
            | Left err => pure $ Left err
-         let proposedInstalled = installedIdrisPath version
-         let proposedSymlinked = idrisSymlinkedPath
-         Just installed <- pathExpansion proposedInstalled
-           | Nothing => pure $ Left "Could not resolve install location: \{proposedInstalled}."
-         Just linked <- pathExpansion proposedSymlinked
-           | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedSymlinked}."
-         True <- symlink installed linked
-           | False => pure $ Left "Failed to create symlink for Idris 2 version \{version}."
-         pure $ Right ()
+         let proposedIdrisInstalled = installedIdrisPath version
+         let proposedIdrisSymlinked = idrisSymlinkedPath
+         let proposedLspInstalled = installedLspPath version
+         let proposedLspSymlinked = idrisLspSymlinkedPath
+         Prelude.(>>) @{Monad.Compose}
+           (setLink version proposedIdrisInstalled proposedIdrisSymlinked)
+           (setLink version proposedLspInstalled proposedLspSymlinked)
+
+  where
+    setLink : Version -> (proposedInstalledLocation : String) -> (proposedSymlinkedLocation : String) -> io (Either String ())
+    setLink version proposedInstalledLocation proposedSymlinkedLocation =  do
+      Just installed <- pathExpansion proposedInstalledLocation 
+        | Nothing => pure $ Left "Could not resolve install location: \{proposedInstalledLocation}."
+      Just linked <- pathExpansion proposedSymlinkedLocation 
+        | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedSymlinkedLocation}."
+      True <- exists installed
+        | False => pure $ Right () -- nothing to link to
+      True <- symlink installed linked
+        | False => pure $ Left "Failed to create symlink for Idris 2 version \{version}."
+      pure $ Right ()
 
 ||| Get the version of the Idris installed at the given path.
 export
