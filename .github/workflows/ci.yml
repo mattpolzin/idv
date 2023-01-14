@@ -11,7 +11,7 @@ jobs:
       - name: Install Dependencies
         run: apt-get update && apt-get -y install git
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build & Install Idv
         run: make && make install
       - name: Run Golden tests
@@ -19,11 +19,10 @@ jobs:
       - name: Install w/ LSP
         run: |
           export PATH="$HOME/.idv/bin:$PATH"
-          idv install 0.5.1 --lsp
-          idv select 0.5.1
+          idv install 0.6.0 --lsp
+          idv select 0.6.0
           echo "$(idris2 --version)"
           echo "$(which idris2-lsp)"
-          test "$(idris2 --version)" = 'Idris 2, version 0.5.1-nightly'
+          test "$(idris2 --version)" = 'Idris 2, version 0.6.0-nightly'
           test "$(which idris2-lsp)" != ''
-          # idris2-lsp --version (can't run this yet, only available in LSP as of newer version).
-
+          echo "$(idris2-lsp --version)"
