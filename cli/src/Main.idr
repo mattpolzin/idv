@@ -8,6 +8,8 @@ import System.Directory.Extra
 import Command
 
 %hide Collie.(.handleWith)
+%hide Data.Record.SmartConstructors.Infer.infix.(::=)
+%hide Collie.Modifiers.infix.(::=)
 
 exitError : HasIO io => String -> io a
 exitError err = do
