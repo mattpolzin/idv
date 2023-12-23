@@ -26,6 +26,8 @@ By default, Idv assumes the system copy of Idris 2 has been installed to `~/.idr
 
 ## Installation
 
+**IMPORTANT**: Although Idv does have GitHub "releases," these are really there to track the last commits that will build for a particular version of Idris. Unless you are limited to using an older version of Idris, the recommendation is to clone or download the HEAD (very latest) commit of the main branch of this repository, not the latest GitHub release.
+
 Download the source and then build and install Idv.
 ```shell
 make && make install
@@ -33,7 +35,8 @@ make && make install
 
 Idv installs into `~/.idv` by default. You can optionally specify a non-default install location with the INSTALLDIR environment variable -- be sure to specify this variable for both the `make` and `make install` commands:
 ```shell
-INSTALLDIR=~/staging/idrv make && make install
+export INSTALLDIR=~/staging/idv
+make && make install
 ```
 
 Add the `bin` directory inside the chosen install location (by default, `~/.idv/bin`) to your PATH environment variable somewhere _before_ the system install of Idris 2 (`~/.idris2/bin`). This is important to allow Idv to switch between shadowing or exposing the system installed version.
