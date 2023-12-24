@@ -122,6 +122,18 @@ installedLspPath : Version -> String
 installedLspPath version =
   versionPath version </> relativeBinPath </> idrisLspBinName
 
+||| The full path of a file that stores the source path of the most recent
+||| Idris installation to be symlinked into idv. For example, when switching to a
+||| system install at the default system install path, this file will have
+||| ~/.idris2/bin/idris2 written to it.
+export
+selectedExternalIdrisSourcePath : String
+selectedExternalIdrisSourcePath = idvLocation </> ".selected-idris-source"
+
+checkLocation : HasIO io => Maybe String -> io (Maybe String)
+checkLocation Nothing     = pure Nothing
+checkLocation (Just path) = pure $ guard !(exists path) *> Just path
+
 ||| The install location of the system copy of Idris 2.
 ||| If Idris 2 cannot be located on the system (i.e.
 ||| outside of the Idv versions directory) this function
@@ -136,9 +148,37 @@ systemIdrisPath = do
       defaultPath : io (Maybe String)
       defaultPath = pathExpansion defaultIdris2Location
 
-      checkLocation : Maybe String -> io (Maybe String)
-      checkLocation Nothing     = pure Nothing
-      checkLocation (Just path) = pure $ guard !(exists path) *> Just path
+||| The install location of the pack copy of Idris 2.
+||| If Idris 2 cannot be located at that path this function
+||| returns Nothing.
+export
+packIdrisPath : HasIO io => io (Maybe String)
+packIdrisPath = do
+  Nothing <- checkLocation $ !(getEnv "PACK_DIR") <&> (</> idris2RelativePath)
+    | Just envOverride => pure $ Just envOverride
+  checkLocation $ !defaultPath <&> (</> idris2RelativePath)
+    where
+      defaultPath : io (Maybe String)
+      defaultPath = pathExpansion defaultPackDirectory
+
+      idris2RelativePath : String
+      idris2RelativePath = "bin" </> "idris2"
+
+||| The install location of the pack copy of the LSP.
+||| If the LSP cannot be located at that path this function
+||| returns Nothing.
+export
+packIdrisLspPath : HasIO io => io (Maybe String)
+packIdrisLspPath = do
+  Nothing <- checkLocation $ !(getEnv "PACK_DIR") <&> (</> lspRelativePath)
+    | Just envOverride => pure $ Just envOverride
+  checkLocation $ !defaultPath <&> (</> lspRelativePath)
+    where
+      defaultPath : io (Maybe String)
+      defaultPath = pathExpansion defaultPackDirectory
+
+      lspRelativePath : String
+      lspRelativePath = "bin" </> "idris2-lsp"
 
 ||| The install location of the system copy of the LSP server.
 ||| If Idris 2 cannot be located on the system (i.e.

@@ -270,6 +270,11 @@ selectAndCheckout version = do
 -- Commands
 --
 
+readSelectedExternalPath : HasIO io => io (Maybe String)
+readSelectedExternalPath = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do 
+  selected <- pathExpansion selectedExternalIdrisSourcePath
+  either (const Nothing) (head' . snd) <$> readFilePage 0 (limit 1) selected
+
 export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
@@ -279,12 +284,21 @@ listVersionsCommand = do
     | Nothing => exitError "Failed to retrieve remote versions."
   Just installedVersions <- Installed.listVersions
     | Nothing => exitError "Failed to list local versions."
-  systemInstall <- getSystemVersion
+  systemInstall   <- getSystemVersion
+  systemIdrisPath <- IdvPaths.systemIdrisPath
+  packInstall     <- getPackVersion
+  packIdrisPath   <- IdvPaths.packIdrisPath
   selectedVersion <- getSelectedVersion
-  let isSystemSelected = isNothing $ (flip find installedVersions) . (==) =<< selectedVersion
-  let selectedInstalled = buildSelectedFn selectedVersion
+  selectedExternalPath <- readSelectedExternalPath
+  let isSystemSelected = systemIdrisPath == selectedExternalPath
+  let isPackSelected   = packIdrisPath   == selectedExternalPath
+  let selectedInstalled = if isSystemSelected || isPackSelected 
+                             then (False,)
+                             else buildSelectedFn selectedVersion
   whenJust systemInstall $ \systemVersion => do
     putStrLn $ (if isSystemSelected then "* " else "  ") ++ "system (installed @ v\{systemVersion})"
+  whenJust packInstall $ \packVersion => do
+    putStrLn $ (if isPackSelected then "* " else "  ") ++ "pack   (installed @ v\{packVersion})"
   traverse_ putStrLn $ printVersion . selectedInstalled <$> zipMatch installedVersions remoteVersions
     where
       printVersion : (Bool, Maybe Version, Maybe Version) -> String
@@ -315,25 +329,36 @@ uninstallCommand version =
            uninstall version
            exitSuccess "Uninstalled version \{version}."
 
+||| When switching Idris installs, store the source path of the install using this
+||| function. This is not the path of the source-code, it is the location where the Idris2
+||| binary can be found.
+trackExternalSourcePath : HasIO io => (sourcePath : String) -> io ()
+trackExternalSourcePath sourcePath = whenJust !(pathExpansion selectedExternalIdrisSourcePath) $ 
+                                       \selectedSourcePath => ignore $ writeFile selectedSourcePath sourcePath
+
+untrackExternalSourcePath : HasIO io => io ()
+untrackExternalSourcePath = whenJust !(pathExpansion selectedExternalIdrisSourcePath) $ 
+                              \selectedSourcePath => ignore $ removeFile selectedSourcePath
+
 export
 selectCommand : HasIO io => (version : Version) -> io ()
 selectCommand version = do
   Right () <- selectVersion version
     | Left err => exitError err
+  untrackExternalSourcePath
   exitSuccess "Idris 2 version \{version} selected."
 
-selectSystem : HasIO io => io (Either String ())
-selectSystem = do
+selectOtherIdris : HasIO io => (idrisPath : String) -> (lspPath : Maybe String) -> io (Either String ())
+selectOtherIdris idrisPath lspPath = do
   Right () <- unselect
     | Left err => pure $ Left err
   let proposedIdrisSymlinked = idrisSymlinkedPath
-  Just installedIdris <- systemIdrisPath
-    | Nothing => pure $ Left "Could not find system install of Idris 2. You might have to run this command with the IDRIS2 environment variable set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}."
   Just linkedIdris <- pathExpansion proposedIdrisSymlinked
     | Nothing => pure $ Left "Could not resolve symlinked location: \{proposedIdrisSymlinked}."
-  True <- symlink installedIdris linkedIdris
+  True <- symlink idrisPath linkedIdris
     | False => pure $ Left "Failed to create symlink for Idris 2 system install."
-  case !systemIdrisLspPath of
+  trackExternalSourcePath idrisPath
+  case lspPath of
        Nothing => pure $ Right ()
        Just installedLsp => do
           let proposedLspSymlinked = idrisLspSymlinkedPath
@@ -343,19 +368,42 @@ selectSystem = do
             | False => pure $ Left "Failed to create symlink for Idris 2 LSP system install."
           pure $ Right ()
 
+selectSystemIdris : HasIO io => io (Either String ())
+selectSystemIdris = do
+  Just installedIdrisPath <- systemIdrisPath
+    | Nothing => pure $ Left """
+                             Could not find system install of Idris 2.
+                             You might have to run this command with the IDRIS2 environment variable \
+                             set to the location of the idris2 binary because it is not located at \{defaultIdris2Location}.
+                             """
+  selectOtherIdris installedIdrisPath !systemIdrisLspPath
+
 export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
-  Right () <- selectSystem
+  Right () <- selectSystemIdris
     | Left err => exitError err
-  exitSuccess "System copy of Idris 2 selected."
+  exitSuccess "System install of Idris 2 selected."
+
+export
+selectPackCommand : HasIO io => io ()
+selectPackCommand = do
+  Just installedPackIdrisPath <- packIdrisPath
+    | Nothing => exitError """
+                           Could not find pack install of Idris 2.
+                           You might have to run this command with the PACK_DIR environment variable \
+                           set because it is not located at \{defaultPackDirectory}.
+                           """
+  Right () <- selectOtherIdris installedPackIdrisPath !packIdrisLspPath
+    | Left err => exitError err
+  exitSuccess "Pack install of Idris 2 selected."
 
 ||| Select the given version and print messages to the effect of
 ||| failing to switch _back_ to that version if unsuccessful.
 switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io (Either String ())
 switchBack actionMsg prevVersion = do
   Right True <- isInstalled prevVersion
-    | Right False => selectSystem
+    | Right False => selectSystemIdris
     | Left err    => pure $ Left err
   Right () <- selectVersion prevVersion
     | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"

@@ -9,3 +9,7 @@ export
 defaultIdris2Location : String
 defaultIdris2Location = "~/.idris2/bin/idris2"
 
+export
+defaultPackDirectory : String
+defaultPackDirectory = "~/.pack"
+

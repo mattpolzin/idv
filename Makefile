@@ -3,6 +3,7 @@ CWD = $(shell pwd)
 
 INSTALLDIR ?= ~/.idv
 IDRIS2 ?= ~/.idris2/bin/idris2
+PACK_DIR ?= ~/.pack
 
 EXECDIR = $(INSTALLDIR)/bin
 IDRISVERSIONDIR = $(INSTALLDIR)/versions
@@ -34,7 +35,7 @@ depends/collie-0:
 
 depends/idv-backend-0: backend/idv-backend.ipkg backend/src/*.idr backend/src/**/*.idr 
 	@mkdir -p depends/idv-backend-0 && \
-	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" ./generate_paths.sh
+	INSTALLDIR="$(INSTALLDIR)" IDRIS2="$(IDRIS2)" PACK_DIR="$(PACK_DIR)" ./generate_paths.sh
 	cd backend && \
 	idris2 --build idv-backend.ipkg &&\
 	cp -R ./build/ttc/* ../depends/idv-backend-0 && \

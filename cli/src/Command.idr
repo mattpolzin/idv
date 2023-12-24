@@ -37,7 +37,11 @@ idv = MkCommand
     installCommand : Command "install"
     installCommand = MkCommand
       { name = "install"
-      , description = "<version> Install the given Idris 2 version and optionally also install the Idris 2 API."
+      , description = """
+                      <version> Install the given Idris 2 version and optionally also install the Idris 2 API.
+                      Although you can switch to the system or pack installs, you cannot install those special \
+                      targets via this command.
+                      """
       , subcommands = []
       , modifiers = [
             "--api" ::= (flag $ """
@@ -57,7 +61,11 @@ idv = MkCommand
     uninstallCommand : Command "uninstall"
     uninstallCommand = MkCommand
       { name = "uninstall"
-      , description = "<version> Uninstall the given Idris 2 version."
+      , description = """
+                      <version> Uninstall the given Idris 2 version.
+                      Although you can switch to the system or pack installs, you cannot uninstall those special \
+                      targets via this command.
+                      """
       , subcommands = []
       , modifiers = []
       , arguments = version
@@ -68,7 +76,9 @@ idv = MkCommand
       { name = "select"
       , description = "<version> Select the given (already installed) version of Idris 2."
       , subcommands = 
-        [ "system" ::= basic "Select the system install of Idris 2 (generally ~/.idris2/bin/idris2)." none ]
+        [ "system" ::= basic "Select the system install of Idris 2 (generally ~/.idris2/bin/idris2)." none
+        , "pack"   ::= basic "Select the pack install of Idris 2 (generally ~/.pack/bin/idris2)." none
+        ]
       , modifiers = []
       , arguments = version
       }
