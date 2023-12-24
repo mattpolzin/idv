@@ -11,6 +11,9 @@ CHECKOUTDIR = $(INSTALLDIR)/checkout
 INTERACTIVE_TESTS ?= --interactive
 TEST_INSTALLDIR ?= $(CWD)/tests/.idv
 
+COLLIE_REPO = mattpolzin
+COLLIE_COMMIT = a177cd87ad5aaf0531ced2c12b37be00b74c30a3
+
 .PHONY: all build install test clean clean-backend clean-tests deps build-idv build-backend
 
 all: build
@@ -20,9 +23,9 @@ depends/collie-0:
 	mkdir -p deps-build && \
 	cd deps-build && \
 	rm -rf ./collie && \
-	git clone https://github.com/ohad/collie.git && \
+	git clone https://github.com/$(COLLIE_REPO)/collie.git && \
 	cd collie && \
-	git checkout 46bff04a8d9a1598fec9b19f515541df16dc64ef && \
+	git checkout $(COLLIE_COMMIT) && \
 	make && \
 	cp -R ./build/ttc/* ../../depends/collie-0 && \
 	cd ../.. && \

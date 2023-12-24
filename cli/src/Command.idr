@@ -6,6 +6,9 @@ import Data.List1
 
 import Data.Version
 
+%hide Data.Record.SmartConstructors.Infer.infix.(::=)
+%hide Collie.Modifiers.infix.(::=)
+
 orError : (err : String) -> Maybe a -> Either String a
 orError err = maybe (Left err) Right
 
