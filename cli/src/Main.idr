@@ -53,6 +53,7 @@ handleCommand' =
   , "select"    ::= [ (\args => let version = args.arguments
                                 in  selectCommand version )
                     , "system" ::= [ const selectSystemCommand ]
+                    , "pack"   ::= [ const selectPackCommand ]
                     ]
   , "--help"    ::= [ const . exitSuccess $ idv.usage ]
   , "list"      ::= [ const listVersionsCommand ]

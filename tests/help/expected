@@ -5,6 +5,8 @@ idv  An Idris 2 version manager. Facilitates simultaneous installation of
   list       List all installed and available Idris 2 versions.
   install    <version> Install the given Idris 2 version and optionally also
              install the Idris 2 API.
+             Although you can switch to the system or pack installs, you cannot
+             install those special targets via this command.
     --api  Install the Idris 2 API package after installing Idris 2.
            If the specified version of Idris 2 is already installed, the API
            package will be added under the specified installation.
@@ -12,8 +14,11 @@ idv  An Idris 2 version manager. Facilitates simultaneous installation of
            If the specified version of Idris 2 is already installed, the LSP
            server will be added under the specified installation.
   uninstall  <version> Uninstall the given Idris 2 version.
+             Although you can switch to the system or pack installs, you cannot
+             uninstall those special targets via this command.
   select     <version> Select the given (already installed) version of Idris 2.
     system  Select the system install of Idris 2 (generally
             ~/.idris2/bin/idris2).
+    pack    Select the pack install of Idris 2 (generally ~/.pack/bin/idris2).
 
 

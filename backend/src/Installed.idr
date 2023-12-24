@@ -125,6 +125,12 @@ getSystemVersion =
   in  getVersion =<< systemIdrisPath
 
 export
+getPackVersion : HasIO io => io (Maybe Version)
+getPackVersion = 
+  let (=<<) = Prelude.(=<<) @{Monad.Compose}
+  in  getVersion =<< packIdrisPath
+
+export
 getSelectedVersion : HasIO io => io (Maybe Version)
 getSelectedVersion = getVersion idrisSymlinkedPath
 
