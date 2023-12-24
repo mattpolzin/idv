@@ -166,7 +166,7 @@ install installOver installedDir version buildPrefix = do
       | _ => exitError "Failed to install Idris2 libraries \{version}."
     pure ()
   putStrLn ""
-  putStrLn "Idris2 version \{version} successfully installed to \{buildPrefix}."
+  putStrLn "Idris2 version \{version}\{caveat} successfully installed to \{buildPrefix}."
   pure ()
 
   where
@@ -174,6 +174,11 @@ install installOver installedDir version buildPrefix = do
     executableOverride = if installOver
                             then "IDRIS2_BOOT=\"\{installedDir}\""
                             else ""
+
+    caveat : String
+    caveat = if installOver
+                then ""
+                else " (bootstrap build)"
 
     installCompiler : io Int
     installCompiler = System.system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
@@ -183,6 +188,7 @@ install installOver installedDir version buildPrefix = do
 
 buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
+  putStrLn "Building Idris2 \{version}"
   let target = Idris
   True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris2 repository into local folder."
@@ -209,6 +215,7 @@ buildAndInstall version cleanAfter = do
 
 buildAndInstallLspLib : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLspLib version = do
+  putStrLn "Building Idris2 LSP-lib (dependency for Idris2 LSP)."
   let target = LSPLib
   True <- cloneIfNeeded idrisLspLibRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP Library repository into local folder."
@@ -233,6 +240,7 @@ buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
   when ((version.major == 0 && version.minor >= 7) || version.major > 0) $
     buildAndInstallLspLib version
+  putStrLn "Building Idris2 LSP \{version}"
   let target = LSP
   True <- cloneIfNeeded idrisLspRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP repository into local folder."
@@ -251,6 +259,8 @@ buildAndInstallLsp version = do
     ignore $ clean
   unless (isJust moveDirRes) $ 
     exitError "Failed to install LSP for version \{version}."
+  putStrLn ""
+  putStrLn "Idris2 LSP successfully installed."
 
   where
     installLsp : (buildPrefix : String) -> io Int
