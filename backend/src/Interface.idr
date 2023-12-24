@@ -89,6 +89,13 @@ checkoutIfAvailable target version = do
                    | False => pure $ Left "Could not check out requested version of Idris2."
                  pure $ Right ()
 
+        checkoutLSPLib : io (Either String ())
+        checkoutLSPLib = do
+          let desiredRev = "HEAD"
+          True <- checkout desiredRev
+            | False => pure $ Left "Could not check out required version of the Idris2 LSP Library."
+          pure $ Right ()
+
         checkoutLSP : io (Either String ())
         checkoutLSP = do
           let desiredBranchName = idrisLspBranchName version
@@ -103,8 +110,9 @@ checkoutIfAvailable target version = do
         checkoutTarget : io (Either String ())
         checkoutTarget =
           case target of
-               Idris => checkoutIdris
-               LSP   => checkoutLSP
+               Idris  => checkoutIdris
+               LSP    => checkoutLSP
+               LSPLib => checkoutLSPLib
 
         changeDirAndCheckout : io (Maybe (Either String ()))
         changeDirAndCheckout =
@@ -199,8 +207,32 @@ buildAndInstall version cleanAfter = do
   unless (isJust moveDirRes) $ 
     exitError "Failed to install version \{version}."
 
+buildAndInstallLspLib : HasIO io => (idrisVersion : Version) -> io ()
+buildAndInstallLspLib version = do
+  let target = LSPLib
+  True <- cloneIfNeeded idrisLspLibRepoURL (relativeCheckoutPath target)
+    | False => exitError "Failed to clone Idris 2 LSP Library repository into local folder."
+  Right _ <- checkoutIfAvailable target version
+    | Left err => exitError err
+  moveDirRes <- inDir (relativeCheckoutPath target) $ do
+    let proposedBuildPrefix = buildPrefix version
+    Just buildPrefix <- pathExpansion proposedBuildPrefix
+      | Nothing => exitError "Could not resolve build prefix directory: \{proposedBuildPrefix}."
+    0 <- installLspLib buildPrefix
+      | _ => exitError "Failed to build & install LSP Library."
+    -- clean up
+    ignore $ clean
+  unless (isJust moveDirRes) $
+    exitError "Failed to install LSP Library for version \{version}."
+
+  where
+    installLspLib : (buildPrefix : String) -> io Int
+    installLspLib buildPrefix = System.system "idris2 --install-with-src"
+
 buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
+  when ((version.major == 0 && version.minor >= 7) || version.major > 0) $
+    buildAndInstallLspLib version
   let target = LSP
   True <- cloneIfNeeded idrisLspRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP repository into local folder."

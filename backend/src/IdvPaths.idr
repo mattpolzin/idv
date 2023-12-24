@@ -19,17 +19,22 @@ idrisLspRepoURL : String
 idrisLspRepoURL = "https://github.com/idris-community/idris2-lsp.git"
 
 export
+idrisLspLibRepoURL : String
+idrisLspLibRepoURL = "https://github.com/idris-community/LSP-lib.git"
+
+export
 idrisLspBranchName : (idrisVersion : Version) -> String
 idrisLspBranchName idrisVersion =
   "idris2-\{dropPrerelease idrisVersion}"
 
 public export
-data BuildTarget = Idris | LSP
+data BuildTarget = Idris | LSP | LSPLib
 
 export
 relativeCheckoutPath : (target : BuildTarget) -> String
-relativeCheckoutPath Idris = "idris_checkout"
-relativeCheckoutPath LSP = "lsp_checkout"
+relativeCheckoutPath Idris  = "idris_checkout"
+relativeCheckoutPath LSP    = "lsp_checkout"
+relativeCheckoutPath LSPLib = "lsp_lib_checkout"
 
 export
 relativeVersionsPath : String
