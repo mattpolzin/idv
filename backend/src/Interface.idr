@@ -16,8 +16,6 @@ import public IdvPaths
 import Installed
 import Interp
 
-import Debug.Trace
-
 exitError : HasIO io => String -> io a
 exitError err = do
   putStrLn ""
