@@ -16,6 +16,8 @@ import public IdvPaths
 import Installed
 import Interp
 
+import Debug.Trace
+
 exitError : HasIO io => String -> io a
 exitError err = do
   putStrLn ""
@@ -321,8 +323,8 @@ listVersionsCommand = do
   packIdrisPath   <- IdvPaths.packIdrisPath
   selectedVersion <- getSelectedVersion
   selectedExternalPath <- readSelectedExternalPath
-  let isSystemSelected = systemIdrisPath == selectedExternalPath
-  let isPackSelected   = packIdrisPath   == selectedExternalPath
+  let isSystemSelected = isJust selectedExternalPath && systemIdrisPath == selectedExternalPath
+  let isPackSelected   = isJust selectedExternalPath && packIdrisPath   == selectedExternalPath
   let selectedInstalled = if isSystemSelected || isPackSelected 
                              then (False,)
                              else buildSelectedFn selectedVersion
