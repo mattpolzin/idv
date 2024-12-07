@@ -38,6 +38,7 @@ Ord Version where
       vectCompare : Vect 3 Nat -> Vect 3 Nat -> Ordering
       vectCompare = compare
 
+export
 version : (tag : String) -> (prereleaseIdentifier : Maybe String) -> Vect 3 Nat -> Version
 version tag pre [x, y, z] = V x y z pre tag
 

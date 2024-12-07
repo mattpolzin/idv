@@ -91,8 +91,7 @@ checkoutIfAvailable target version = do
 
         checkoutLSPLib : io (Either String ())
         checkoutLSPLib = do
-          let desiredRev = "HEAD"
-          True <- checkout desiredRev
+          True <- checkout (lspLibRev version)
             | False => pure $ Left "Could not check out required version of the Idris2 LSP Library."
           pure $ Right ()
 
@@ -184,7 +183,7 @@ install installOver installedDir version buildPrefix = do
 buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
   let target = Idris
-  True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath target)
+  True <- cloneIfNeeded "Idris 2" idrisRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris2 repository into local folder."
   Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
@@ -210,7 +209,7 @@ buildAndInstall version cleanAfter = do
 buildAndInstallLspLib : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLspLib version = do
   let target = LSPLib
-  True <- cloneIfNeeded idrisLspLibRepoURL (relativeCheckoutPath target)
+  True <- cloneIfNeeded "LSP-lib" idrisLspLibRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP Library repository into local folder."
   Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
@@ -234,7 +233,7 @@ buildAndInstallLsp version = do
   when ((version.major == 0 && version.minor >= 7) || version.major > 0) $
     buildAndInstallLspLib version
   let target = LSP
-  True <- cloneIfNeeded idrisLspRepoURL (relativeCheckoutPath target)
+  True <- cloneIfNeeded "LSP Server" idrisLspRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP repository into local folder."
   Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
@@ -310,7 +309,7 @@ readSelectedExternalPath = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do
 export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
-  True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath Idris)
+  True <- cloneIfNeeded "Idris 2" idrisRepoURL (relativeCheckoutPath Idris)
     | False => exitError "Failed to clone Idris2 repository into local folder."
   Just remoteVersions <- inDir (relativeCheckoutPath Idris) fetchAndListVersions
     | Nothing => exitError "Failed to retrieve remote versions."
