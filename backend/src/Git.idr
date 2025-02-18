@@ -24,8 +24,8 @@ clone repoURL path = eatOutput False "git clone '\{repoURL}' '\{path}'"
 export
 cloneIfNeeded : HasIO io => (description : String) -> (repoURL : String) -> (path : String) -> io Bool
 cloneIfNeeded desc repoURL path = do
-  True <- createDirIfNeeded path
-    | False => pure False
+  Right () <- createDirIfNeeded path
+    | Left _ => pure False
   Just False <- inDir path $ repoExists
     | _ => pure True
   putStrLn "Cloning \{desc} repository..."

@@ -34,8 +34,8 @@ createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
   Just resolvedVersionsDir <- pathExpansion $ versionPath version
     | Nothing => exitError "Could not resolve install directory for new Idris2 version."
-  True <- createDirIfNeeded $ resolvedVersionsDir
-    | False => exitError "Could not create install directory for new Idris2 version."
+  Right () <- createDirIfNeeded $ resolvedVersionsDir
+    | Left err => exitError "Could not create install directory for new Idris2 version (\{show err}))."
   pure ()
 
 ||| Assumes the current working directory is a git repository.
