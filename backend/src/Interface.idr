@@ -34,8 +34,8 @@ createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
   Just resolvedVersionsDir <- pathExpansion $ versionPath version
     | Nothing => exitError "Could not resolve install directory for new Idris2 version."
-  True <- createDirIfNeeded $ resolvedVersionsDir
-    | False => exitError "Could not create install directory for new Idris2 version."
+  Right () <- createDirIfNeeded $ resolvedVersionsDir
+    | Left err => exitError "Could not create install directory for new Idris2 version (\{show err}))."
   pure ()
 
 ||| Assumes the current working directory is a git repository.
@@ -91,8 +91,7 @@ checkoutIfAvailable target version = do
 
         checkoutLSPLib : io (Either String ())
         checkoutLSPLib = do
-          let desiredRev = "HEAD"
-          True <- checkout desiredRev
+          True <- checkout (lspLibRev version)
             | False => pure $ Left "Could not check out required version of the Idris2 LSP Library."
           pure $ Right ()
 
@@ -190,7 +189,7 @@ buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
   putStrLn "Building Idris2 \{version}"
   let target = Idris
-  True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath target)
+  True <- cloneIfNeeded "Idris 2" idrisRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris2 repository into local folder."
   Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
@@ -217,7 +216,7 @@ buildAndInstallLspLib : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLspLib version = do
   putStrLn "Building Idris2 LSP-lib (dependency for Idris2 LSP)."
   let target = LSPLib
-  True <- cloneIfNeeded idrisLspLibRepoURL (relativeCheckoutPath target)
+  True <- cloneIfNeeded "LSP-lib" idrisLspLibRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP Library repository into local folder."
   Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
@@ -238,11 +237,11 @@ buildAndInstallLspLib version = do
 
 buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
-  when ((version.major == 0 && version.minor >= 7) || version.major > 0) $
+  when (version > v 0 7 0) $
     buildAndInstallLspLib version
   putStrLn "Building Idris2 LSP \{version}"
   let target = LSP
-  True <- cloneIfNeeded idrisLspRepoURL (relativeCheckoutPath target)
+  True <- cloneIfNeeded "LSP Server" idrisLspRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP repository into local folder."
   Right _ <- checkoutIfAvailable target version
     | Left err => exitError err
@@ -320,7 +319,7 @@ readSelectedExternalPath = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do
 export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
-  True <- cloneIfNeeded idrisRepoURL (relativeCheckoutPath Idris)
+  True <- cloneIfNeeded "Idris 2" idrisRepoURL (relativeCheckoutPath Idris)
     | False => exitError "Failed to clone Idris2 repository into local folder."
   Just remoteVersions <- inDir (relativeCheckoutPath Idris) fetchAndListVersions
     | Nothing => exitError "Failed to retrieve remote versions."
@@ -332,8 +331,8 @@ listVersionsCommand = do
   packIdrisPath   <- IdvPaths.packIdrisPath
   selectedVersion <- getSelectedVersion
   selectedExternalPath <- readSelectedExternalPath
-  let isSystemSelected = systemIdrisPath == selectedExternalPath
-  let isPackSelected   = packIdrisPath   == selectedExternalPath
+  let isSystemSelected = isJust selectedExternalPath && systemIdrisPath == selectedExternalPath
+  let isPackSelected   = isJust selectedExternalPath && packIdrisPath   == selectedExternalPath
   let selectedInstalled = if isSystemSelected || isPackSelected 
                              then (False,)
                              else buildSelectedFn selectedVersion

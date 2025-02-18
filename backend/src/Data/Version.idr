@@ -38,8 +38,32 @@ Ord Version where
       vectCompare : Vect 3 Nat -> Vect 3 Nat -> Ordering
       vectCompare = compare
 
+namespace VersionProperties
+  compareEq : Prelude.compare (V 1 2 3 Nothing "") (V 1 2 3 Nothing "") = EQ
+  compareEq = Refl
+
+  compareEqWithPrerelease : Prelude.compare (V 1 2 3 (Just "rc.1") "") (V 1 2 3 (Just "rc.1") "") = EQ
+  compareEqWithPrerelease = Refl
+
+  compareOrderedPrerelease : Prelude.compare (V 1 2 3 (Just "rc.1") "") (V 1 2 3 (Just "rc.2") "") = LT
+  compareOrderedPrerelease = Refl
+
+  compareOrderedPatch : Prelude.compare (V 1 2 3 Nothing "") (V 1 2 4 Nothing "") = LT
+  compareOrderedPatch = Refl
+
+  compareOrderedMinor : Prelude.compare (V 1 2 3 Nothing "") (V 1 3 0 Nothing "") = LT
+  compareOrderedMinor = Refl
+
+  compareOrderedMajor : Prelude.compare (V 1 2 3 Nothing "") (V 2 0 0 Nothing "") = LT
+  compareOrderedMajor = Refl
+
+export
 version : (tag : String) -> (prereleaseIdentifier : Maybe String) -> Vect 3 Nat -> Version
 version tag pre [x, y, z] = V x y z pre tag
+
+export
+v : Nat -> Nat -> Nat -> Version
+v k j l = V k j l Nothing ""
 
 ||| Drop any pre-release info from the Version. Note that this does
 ||| not discard the tag if one is stored on the Version.

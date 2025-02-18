@@ -2,11 +2,12 @@ module IdvPaths
 
 import public IdvPaths.Generated
 
+import Data.Vect
 import Data.Version
-import System.Path
-import System.Directory.Extra
 import System
+import System.Directory.Extra
 import System.File
+import System.Path
 
 import Interp
 
@@ -26,6 +27,13 @@ export
 idrisLspBranchName : (idrisVersion : Version) -> String
 idrisLspBranchName idrisVersion =
   "idris2-\{dropPrerelease idrisVersion}"
+
+export
+lspLibRev : Version -> String
+lspLibRev version = 
+  if version > v 0 7 0
+     then "HEAD"
+     else "6b79b66f555c0130932bf8a50b959684aba073dc"
 
 public export
 data BuildTarget = Idris | LSP | LSPLib

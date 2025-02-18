@@ -22,13 +22,13 @@ clone repoURL path = eatOutput False "git clone '\{repoURL}' '\{path}'"
 ||| Returns True if the directory already contained a repo or if the
 ||| repo was successfully cloned into the requested path.
 export
-cloneIfNeeded : HasIO io => (repoURL : String) -> (path : String) -> io Bool
-cloneIfNeeded repoURL path = do
-  True <- createDirIfNeeded path
-    | False => pure False
+cloneIfNeeded : HasIO io => (description : String) -> (repoURL : String) -> (path : String) -> io Bool
+cloneIfNeeded desc repoURL path = do
+  Right () <- createDirIfNeeded path
+    | Left _ => pure False
   Just False <- inDir path $ repoExists
     | _ => pure True
-  putStrLn "Cloning Idris 2 repository..."
+  putStrLn "Cloning \{desc} repository..."
   clone repoURL path
 
 ||| Fetch the repo in the current working directory.
