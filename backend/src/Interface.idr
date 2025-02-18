@@ -34,8 +34,8 @@ createVersionsDir : HasIO io => Version -> io ()
 createVersionsDir version = do
   Just resolvedVersionsDir <- pathExpansion $ versionPath version
     | Nothing => exitError "Could not resolve install directory for new Idris2 version."
-  True <- createDirIfNeeded $ resolvedVersionsDir
-    | False => exitError "Could not create install directory for new Idris2 version."
+  Right () <- createDirIfNeeded $ resolvedVersionsDir
+    | Left err => exitError "Could not create install directory for new Idris2 version (\{show err}))."
   pure ()
 
 ||| Assumes the current working directory is a git repository.
@@ -230,7 +230,7 @@ buildAndInstallLspLib version = do
 
 buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
-  when ((version.major == 0 && version.minor >= 7) || version.major > 0) $
+  when (version > v 0 7 0) $
     buildAndInstallLspLib version
   let target = LSP
   True <- cloneIfNeeded "LSP Server" idrisLspRepoURL (relativeCheckoutPath target)

@@ -5,15 +5,16 @@ import Data.String.Extra
 import System
 import System.Directory
 import System.Path
+import public System.File.Error
 
 export
-createDirIfNeeded : HasIO io => (path : String) -> io Bool
+createDirIfNeeded : HasIO io => (path : String) -> io (Either FileError ())
 createDirIfNeeded path =
   pure $ 
     case !(createDir path) of
-         Right ()        => True
-         Left FileExists => True
-         _               => False
+         Right ()        => Right ()
+         Left FileExists => Right ()
+         Left err        => Left err
 
 ||| Expand path as shells tend to. Limited support so far.
 |||

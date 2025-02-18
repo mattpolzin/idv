@@ -31,7 +31,7 @@ idrisLspBranchName idrisVersion =
 export
 lspLibRev : Version -> String
 lspLibRev version = 
-  if version > (Version.version "" Nothing [0,7,0])
+  if version > v 0 7 0
      then "HEAD"
      else "6b79b66f555c0130932bf8a50b959684aba073dc"
 
