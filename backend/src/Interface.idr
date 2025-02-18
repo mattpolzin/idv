@@ -237,7 +237,7 @@ buildAndInstallLspLib version = do
 
 buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
-  when (version > v 0 7 0) $
+  when (version >= v 0 7 0) $
     buildAndInstallLspLib version
   putStrLn "Building Idris2 LSP \{version}"
   let target = LSP

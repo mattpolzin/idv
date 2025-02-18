@@ -45,8 +45,11 @@ namespace VersionProperties
   compareEqWithPrerelease : Prelude.compare (V 1 2 3 (Just "rc.1") "") (V 1 2 3 (Just "rc.1") "") = EQ
   compareEqWithPrerelease = Refl
 
-  compareOrderedPrerelease : Prelude.compare (V 1 2 3 (Just "rc.1") "") (V 1 2 3 (Just "rc.2") "") = LT
-  compareOrderedPrerelease = Refl
+  compareOrderedPrerelease1 : Prelude.compare (V 1 2 3 Nothing "") (V 1 2 3 (Just "rc.1") "") = LT
+  compareOrderedPrerelease1 = Refl
+
+  compareOrderedPrerelease2 : Prelude.compare (V 1 2 3 (Just "rc.1") "") (V 1 2 3 (Just "rc.2") "") = LT
+  compareOrderedPrerelease2 = Refl
 
   compareOrderedPatch : Prelude.compare (V 1 2 3 Nothing "") (V 1 2 4 Nothing "") = LT
   compareOrderedPatch = Refl
