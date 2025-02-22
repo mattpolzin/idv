@@ -230,7 +230,7 @@ buildAndInstallLspLib version = do
 
 buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
-  when (version > v 0 7 0) $
+  when (version >= v 0 7 0) $
     buildAndInstallLspLib version
   let target = LSP
   True <- cloneIfNeeded "LSP Server" idrisLspRepoURL (relativeCheckoutPath target)
