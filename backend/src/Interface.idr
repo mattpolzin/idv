@@ -464,7 +464,8 @@ installAPICommand version = do
   Just _ <- inDir (relativeCheckoutPath Idris) (installApi version)
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
-  whenJust selectedVersion $ \prevVersion =>
+  whenJust selectedVersion $ \prevVersion => do
+    putStrLn "Switching back to previously selected Idris2 version (\{show prevVersion})"
     case !(switchBack "installed Idris 2 API version \{version} package" prevVersion) of
          Right () => pure ()
          Left err => exitError err
