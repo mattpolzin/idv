@@ -5,6 +5,7 @@ module Installed
 
 import Data.Either
 import Data.List
+import Data.Maybe
 import Data.Version
 import Data.String
 import System.Console.Extra
@@ -131,23 +132,60 @@ getPackVersion =
   let (=<<) = Prelude.(=<<) @{Monad.Compose}
   in  getVersion =<< packIdrisPath
 
+||| Read the path of the selected Idris version if and only if that version is
+||| extrenal to idv (like a system or pack install of Idris)
 export
-getSelectedVersion : HasIO io => io (Maybe Version)
-getSelectedVersion = getVersion idrisSymlinkedPath
+readSelectedExternalPath : HasIO io => io (Maybe String)
+readSelectedExternalPath = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do 
+  selected <- pathExpansion selectedExternalIdrisSourcePath
+  either (const Nothing) (head' . snd) <$> readFilePage 0 (limit 1) selected
+
+public export
+data SelectedVersion = System Version
+                     | Pack Version
+                     | Idv Version
+
+export
+(.version) : SelectedVersion -> Version
+(.version) (System version) = version
+(.version) (Pack version) = version
+(.version) (Idv version) = version
+
+export
+Show SelectedVersion where
+  show (System version) = "System install @ \{show version}"
+  show (Pack version) = "Pack install @ \{show version}"
+  show (Idv version) = show version
+
+export
+getSelectedVersion : HasIO io => io (Maybe SelectedVersion)
+getSelectedVersion = do
+  selectedExternalPath <- readSelectedExternalPath
+  systemIdrisPath <- IdvPaths.systemIdrisPath
+  packIdrisPath   <- IdvPaths.packIdrisPath
+  let False = isJust selectedExternalPath && systemIdrisPath == selectedExternalPath
+    | _ => [ System <$> v | v <- getSystemVersion ]
+  let False = isJust selectedExternalPath && packIdrisPath   == selectedExternalPath
+    | _ => [ Pack <$> v | v <- getPackVersion ]
+  
+  -- we drop the preprelease of any installed version we find because idv only
+  -- installs whole number releases so any prereelase specified will be an
+  -- artifact of the install environment
+  [ (Idv . dropPrerelease) <$> v | v <- getVersion idrisSymlinkedPath ]
 
 ||| Use the given version for an operation and then switch back.
 export
 withVersion : HasIO io => Version -> io (Either String a) -> io (Either String a)
 withVersion version op = do
-  previousVersion <- getSelectedVersion
+  previousSelectedVersion <- getSelectedVersion
   Right () <- selectVersion version
     | Left err => pure $ Left err
   res <- op
-  Right () <- undoSelect previousVersion
+  Right () <- undoSelect previousSelectedVersion
     | Left err => pure $ Left err
   pure res
     where
-      undoSelect : (previous : Maybe Version) -> io (Either String ())
+      undoSelect : (previous : Maybe SelectedVersion) -> io (Either String ())
       undoSelect Nothing  = unselect
-      undoSelect (Just v) = selectVersion version
+      undoSelect (Just v) = selectVersion v.version
 

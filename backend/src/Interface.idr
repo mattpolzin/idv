@@ -311,11 +311,6 @@ selectAndCheckout version = do
 -- Commands
 --
 
-readSelectedExternalPath : HasIO io => io (Maybe String)
-readSelectedExternalPath = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do 
-  selected <- pathExpansion selectedExternalIdrisSourcePath
-  either (const Nothing) (head' . snd) <$> readFilePage 0 (limit 1) selected
-
 export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
@@ -348,11 +343,11 @@ listVersionsCommand = do
       printVersion (sel, Just v, Nothing) = (if sel then "* " else "  ") ++ "\{v}  (local only)"
       printVersion (_, Nothing, Nothing) = ""
 
-      buildSelectedFn : (selectedVersion : Maybe Version) 
+      buildSelectedFn : (selectedVersion : Maybe SelectedVersion) 
                      -> (Maybe Version, Maybe Version) 
                      -> (Bool, Maybe Version, Maybe Version)
       buildSelectedFn selectedVersion (l, r) = 
-        let selectedVersion' = dropPrerelease <$> selectedVersion
+        let selectedVersion' = (dropPrerelease . .version) <$> selectedVersion
         in  (l == selectedVersion', l, r)
 
 export
@@ -421,6 +416,16 @@ selectSystemIdris = do
                              """
   selectOtherIdris installedIdrisPath !systemIdrisLspPath
 
+selectPackIdris : HasIO io => io (Either String ())
+selectPackIdris = do
+  Just installedPackIdrisPath <- packIdrisPath
+    | Nothing => pure $ Left """
+                             Could not find pack install of Idris 2.
+                             You might have to run this command with the PACK_DIR environment variable \
+                             set because it is not located at \{defaultIdris2Location}.
+                             """
+  selectOtherIdris installedPackIdrisPath !packIdrisLspPath
+
 export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
@@ -431,26 +436,24 @@ selectSystemCommand = do
 export
 selectPackCommand : HasIO io => io ()
 selectPackCommand = do
-  Just installedPackIdrisPath <- packIdrisPath
-    | Nothing => exitError """
-                           Could not find pack install of Idris 2.
-                           You might have to run this command with the PACK_DIR environment variable \
-                           set because it is not located at \{defaultPackDirectory}.
-                           """
-  Right () <- selectOtherIdris installedPackIdrisPath !packIdrisLspPath
+  Right () <- selectPackIdris
     | Left err => exitError err
   exitSuccess "Pack install of Idris 2 selected."
 
 ||| Select the given version and print messages to the effect of
 ||| failing to switch _back_ to that version if unsuccessful.
-switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io (Either String ())
+switchBack : HasIO io => (actionMsg : String) -> (prevVersion : SelectedVersion) -> io (Either String ())
 switchBack actionMsg prevVersion = do
-  Right True <- isInstalled prevVersion
-    | Right False => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} because it couldn't be found at the expected install location"
-    | Left err    => pure $ Left err
-  Right () <- selectVersion prevVersion
-    | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"
-  pure $ Right ()
+  case prevVersion of
+       (System _) => selectSystemIdris
+       (Pack _) => selectPackIdris
+       (Idv version) => do
+          Right True <- isInstalled version
+            | Right False => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{version} because it couldn't be found at the expected install location"
+            | Left err    => pure $ Left err
+          Right () <- selectVersion version
+            | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{version} with error: \{err}"
+          pure $ Right ()
 
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 export
@@ -467,7 +470,7 @@ installApiCommand version = do
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
   whenJust selectedVersion $ \prevVersion => do
-    putStrLn "Switching back to previously selected Idris2 version (\{show prevVersion})"
+    putStrLn "Switching back to previously selected Idris2 install (\{show prevVersion})"
     case !(switchBack "installed Idris 2 API version \{version} package" prevVersion) of
          Right () => pure ()
          Left err => exitError err
