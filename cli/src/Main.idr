@@ -40,9 +40,9 @@ handleCommand' =
                                     -- just as installing the API requires installing
                                     -- Idris.
                                 in  if args.modifiers.project "--lsp"
-                                       then installLSPCommand version
+                                       then installLspCommand version
                                        else if args.modifiers.project "--api"
-                                            then installAPICommand version
+                                            then installApiCommand version
                                             else installCommand version True
                       )
                     ]

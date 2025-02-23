@@ -112,7 +112,7 @@ parseSpokenVersion = parseVersion . drop (length "Idris 2, version ")
 |||
 ||| [1.0.0, 1.1.0, 2.0.0] `zipmatch` [1.0.0, 2.0.0, 3.0.0]
 ||| results in:
-||| [(1.0.0, 1.0.0), (1.1.0, Nothing), (2.0.0, 2.0.0), (Nothing, 3..0.0)]
+||| [(1.0.0, 1.0.0), (1.1.0, Nothing), (2.0.0, 2.0.0), (Nothing, 3.0.0)]
 export
 zipMatch : List Version -> List Version -> List (Maybe Version, Maybe Version)
 zipMatch xs ys = go (sort xs) (sort ys) []

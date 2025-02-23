@@ -89,14 +89,14 @@ checkoutIfAvailable target version = do
                    | False => pure $ Left "Could not check out requested version of Idris2."
                  pure $ Right ()
 
-        checkoutLSPLib : io (Either String ())
-        checkoutLSPLib = do
+        checkoutLspLib : io (Either String ())
+        checkoutLspLib = do
           True <- checkout (lspLibRev version)
             | False => pure $ Left "Could not check out required version of the Idris2 LSP Library."
           pure $ Right ()
 
-        checkoutLSP : io (Either String ())
-        checkoutLSP = do
+        checkoutLsp : io (Either String ())
+        checkoutLsp = do
           let desiredBranchName = idrisLspBranchName version
           availableBranches <- listBranches
           case List.find (desiredBranchName `isInfixOf`) availableBranches of
@@ -110,8 +110,8 @@ checkoutIfAvailable target version = do
         checkoutTarget =
           case target of
                Idris  => checkoutIdris
-               LSP    => checkoutLSP
-               LSPLib => checkoutLSPLib
+               LSP    => checkoutLsp
+               LSPLib => checkoutLspLib
 
         changeDirAndCheckout : io (Maybe (Either String ()))
         changeDirAndCheckout =
@@ -444,7 +444,7 @@ selectPackCommand = do
 switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io (Either String ())
 switchBack actionMsg prevVersion = do
   Right True <- isInstalled prevVersion
-    | Right False => selectSystemIdris
+    | Right False => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} because it couldn't be found at the expected install location"
     | Left err    => pure $ Left err
   Right () <- selectVersion prevVersion
     | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"
@@ -452,8 +452,8 @@ switchBack actionMsg prevVersion = do
 
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 export
-installAPICommand : HasIO io => (version : Version) -> io ()
-installAPICommand version = do 
+installApiCommand : HasIO io => (version : Version) -> io ()
+installApiCommand version = do 
   selectedVersion <- getSelectedVersion
   -- we won't reinstall Idris 2 if not needed:
   unless !(selectAndCheckout version) $ do
@@ -472,14 +472,14 @@ installAPICommand version = do
 
 ||| Install the Idris 2 LSP (and the related version of Idris, if needed).
 export
-installLSPCommand : HasIO io => (version : Version) -> io ()
-installLSPCommand version = do
+installLspCommand : HasIO io => (version : Version) -> io ()
+installLspCommand version = do
   when (version < (V 0 4 0 Nothing "")) $
     exitError "The Idris 2 LSP is not supported prior to Idris 2 v0.4.0."
   selectedVersion <- getSelectedVersion
   -- don't reinstall Idris 2 and its API unless needed:
   unless !selectIdrisWithAPI $ do
-    installAPICommand version
+    installApiCommand version
     Right () <- selectVersion version
       | Left err => exitError err
     pure ()

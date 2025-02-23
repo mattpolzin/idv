@@ -19,6 +19,7 @@ jobs:
       - name: Install w/ LSP v0.6.0
         run: |
           export PATH="$HOME/.idv/bin:$PATH"
+          idv list
           idv install 0.6.0 --lsp
           idv select 0.6.0
           echo "$(idris2 --version)"
@@ -29,6 +30,7 @@ jobs:
       - name: Install w/ LSP v0.7.0
         run: |
           export PATH="$HOME/.idv/bin:$PATH"
+          idv list
           idv install 0.7.0 --lsp
           idv select 0.7.0
           echo "$(idris2 --version)"
