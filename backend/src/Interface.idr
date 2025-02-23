@@ -89,14 +89,14 @@ checkoutIfAvailable target version = do
                    | False => pure $ Left "Could not check out requested version of Idris2."
                  pure $ Right ()
 
-        checkoutLSPLib : io (Either String ())
-        checkoutLSPLib = do
+        checkoutLspLib : io (Either String ())
+        checkoutLspLib = do
           True <- checkout (lspLibRev version)
             | False => pure $ Left "Could not check out required version of the Idris2 LSP Library."
           pure $ Right ()
 
-        checkoutLSP : io (Either String ())
-        checkoutLSP = do
+        checkoutLsp : io (Either String ())
+        checkoutLsp = do
           let desiredBranchName = idrisLspBranchName version
           availableBranches <- listBranches
           case List.find (desiredBranchName `isInfixOf`) availableBranches of
@@ -110,8 +110,8 @@ checkoutIfAvailable target version = do
         checkoutTarget =
           case target of
                Idris  => checkoutIdris
-               LSP    => checkoutLSP
-               LSPLib => checkoutLSPLib
+               LSP    => checkoutLsp
+               LSPLib => checkoutLspLib
 
         changeDirAndCheckout : io (Maybe (Either String ()))
         changeDirAndCheckout =
@@ -165,7 +165,7 @@ install installOver installedDir version buildPrefix = do
       | _ => exitError "Failed to install Idris2 libraries \{version}."
     pure ()
   putStrLn ""
-  putStrLn "Idris2 version \{version} successfully installed to \{buildPrefix}."
+  putStrLn "Idris2 version \{version}\{caveat} successfully installed to \{buildPrefix}."
   pure ()
 
   where
@@ -173,6 +173,11 @@ install installOver installedDir version buildPrefix = do
     executableOverride = if installOver
                             then "IDRIS2_BOOT=\"\{installedDir}\""
                             else ""
+
+    caveat : String
+    caveat = if installOver
+                then ""
+                else " (bootstrap build)"
 
     installCompiler : io Int
     installCompiler = System.system "PREFIX=\"\{buildPrefix}\" \{executableOverride} make install"
@@ -182,6 +187,7 @@ install installOver installedDir version buildPrefix = do
 
 buildAndInstall : HasIO io => Version -> (cleanAfter : Bool) -> io ()
 buildAndInstall version cleanAfter = do
+  putStrLn "Building Idris2 \{version}"
   let target = Idris
   True <- cloneIfNeeded "Idris 2" idrisRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris2 repository into local folder."
@@ -208,6 +214,7 @@ buildAndInstall version cleanAfter = do
 
 buildAndInstallLspLib : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLspLib version = do
+  putStrLn "Building Idris2 LSP-lib (dependency for Idris2 LSP)."
   let target = LSPLib
   True <- cloneIfNeeded "LSP-lib" idrisLspLibRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP Library repository into local folder."
@@ -230,8 +237,9 @@ buildAndInstallLspLib version = do
 
 buildAndInstallLsp : HasIO io => (idrisVersion : Version) -> io ()
 buildAndInstallLsp version = do
-  when (version > v 0 7 0) $
+  when (version >= v 0 7 0) $
     buildAndInstallLspLib version
+  putStrLn "Building Idris2 LSP \{version}"
   let target = LSP
   True <- cloneIfNeeded "LSP Server" idrisLspRepoURL (relativeCheckoutPath target)
     | False => exitError "Failed to clone Idris 2 LSP repository into local folder."
@@ -250,6 +258,8 @@ buildAndInstallLsp version = do
     ignore $ clean
   unless (isJust moveDirRes) $ 
     exitError "Failed to install LSP for version \{version}."
+  putStrLn ""
+  putStrLn "Idris2 LSP successfully installed."
 
   where
     installLsp : (buildPrefix : String) -> io Int
@@ -301,11 +311,6 @@ selectAndCheckout version = do
 -- Commands
 --
 
-readSelectedExternalPath : HasIO io => io (Maybe String)
-readSelectedExternalPath = let (>>=) = Prelude.(>>=) @{Monad.Compose} in do 
-  selected <- pathExpansion selectedExternalIdrisSourcePath
-  either (const Nothing) (head' . snd) <$> readFilePage 0 (limit 1) selected
-
 export
 listVersionsCommand : HasIO io => io ()
 listVersionsCommand = do
@@ -338,10 +343,12 @@ listVersionsCommand = do
       printVersion (sel, Just v, Nothing) = (if sel then "* " else "  ") ++ "\{v}  (local only)"
       printVersion (_, Nothing, Nothing) = ""
 
-      buildSelectedFn : (selectedVersion : Maybe Version) 
+      buildSelectedFn : (selectedVersion : Maybe SelectedVersion) 
                      -> (Maybe Version, Maybe Version) 
                      -> (Bool, Maybe Version, Maybe Version)
-      buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
+      buildSelectedFn selectedVersion (l, r) = 
+        let selectedVersion' = (dropPrerelease . .version) <$> selectedVersion
+        in  (l == selectedVersion', l, r)
 
 export
 installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
@@ -409,6 +416,16 @@ selectSystemIdris = do
                              """
   selectOtherIdris installedIdrisPath !systemIdrisLspPath
 
+selectPackIdris : HasIO io => io (Either String ())
+selectPackIdris = do
+  Just installedPackIdrisPath <- packIdrisPath
+    | Nothing => pure $ Left """
+                             Could not find pack install of Idris 2.
+                             You might have to run this command with the PACK_DIR environment variable \
+                             set because it is not located at \{defaultIdris2Location}.
+                             """
+  selectOtherIdris installedPackIdrisPath !packIdrisLspPath
+
 export
 selectSystemCommand : HasIO io => io ()
 selectSystemCommand = do
@@ -419,31 +436,29 @@ selectSystemCommand = do
 export
 selectPackCommand : HasIO io => io ()
 selectPackCommand = do
-  Just installedPackIdrisPath <- packIdrisPath
-    | Nothing => exitError """
-                           Could not find pack install of Idris 2.
-                           You might have to run this command with the PACK_DIR environment variable \
-                           set because it is not located at \{defaultPackDirectory}.
-                           """
-  Right () <- selectOtherIdris installedPackIdrisPath !packIdrisLspPath
+  Right () <- selectPackIdris
     | Left err => exitError err
   exitSuccess "Pack install of Idris 2 selected."
 
 ||| Select the given version and print messages to the effect of
 ||| failing to switch _back_ to that version if unsuccessful.
-switchBack : HasIO io => (actionMsg : String) -> (prevVersion : Version) -> io (Either String ())
+switchBack : HasIO io => (actionMsg : String) -> (prevVersion : SelectedVersion) -> io (Either String ())
 switchBack actionMsg prevVersion = do
-  Right True <- isInstalled prevVersion
-    | Right False => selectSystemIdris
-    | Left err    => pure $ Left err
-  Right () <- selectVersion prevVersion
-    | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{prevVersion} with error: \{err}"
-  pure $ Right ()
+  case prevVersion of
+       (System _) => selectSystemIdris
+       (Pack _) => selectPackIdris
+       (Idv version) => do
+          Right True <- isInstalled version
+            | Right False => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{version} because it couldn't be found at the expected install location"
+            | Left err    => pure $ Left err
+          Right () <- selectVersion version
+            | Left err => pure $ Left "Successfully \{actionMsg} but failed to switch back to Idris version \{version} with error: \{err}"
+          pure $ Right ()
 
 ||| Install the Idris 2 API (and the related version of Idris, if needed).
 export
-installAPICommand : HasIO io => (version : Version) -> io ()
-installAPICommand version = do 
+installApiCommand : HasIO io => (version : Version) -> io ()
+installApiCommand version = do 
   selectedVersion <- getSelectedVersion
   -- we won't reinstall Idris 2 if not needed:
   unless !(selectAndCheckout version) $ do
@@ -454,21 +469,22 @@ installAPICommand version = do
   Just _ <- inDir (relativeCheckoutPath Idris) (installApi version)
     | Nothing => exitError "Failed to switch to checkout branch and install Idris 2 API."
   -- if we know we used to have a different version of Idris selected, switch back.
-  whenJust selectedVersion $ \prevVersion =>
+  whenJust selectedVersion $ \prevVersion => do
+    putStrLn "Switching back to previously selected Idris2 install (\{show prevVersion})"
     case !(switchBack "installed Idris 2 API version \{version} package" prevVersion) of
          Right () => pure ()
          Left err => exitError err
 
 ||| Install the Idris 2 LSP (and the related version of Idris, if needed).
 export
-installLSPCommand : HasIO io => (version : Version) -> io ()
-installLSPCommand version = do
+installLspCommand : HasIO io => (version : Version) -> io ()
+installLspCommand version = do
   when (version < (V 0 4 0 Nothing "")) $
     exitError "The Idris 2 LSP is not supported prior to Idris 2 v0.4.0."
   selectedVersion <- getSelectedVersion
   -- don't reinstall Idris 2 and its API unless needed:
   unless !selectIdrisWithAPI $ do
-    installAPICommand version
+    installApiCommand version
     Right () <- selectVersion version
       | Left err => exitError err
     pure ()

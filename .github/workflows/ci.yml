@@ -16,13 +16,25 @@ jobs:
         run: make && make install
       - name: Run Golden tests
         run: INTERACTIVE_TESTS='' TEST_INSTALLDIR=~/test/.idv IDRIS2=/root/.idris2/bin/idris2 make test
-      - name: Install w/ LSP
+      - name: Install w/ LSP v0.6.0
         run: |
           export PATH="$HOME/.idv/bin:$PATH"
+          idv list
           idv install 0.6.0 --lsp
           idv select 0.6.0
           echo "$(idris2 --version)"
           echo "$(which idris2-lsp)"
           test "$(idris2 --version)" = 'Idris 2, version 0.6.0-nightly'
+          test "$(which idris2-lsp)" != ''
+          echo "$(idris2-lsp --version)"
+      - name: Install w/ LSP v0.7.0
+        run: |
+          export PATH="$HOME/.idv/bin:$PATH"
+          idv list
+          idv install 0.7.0 --lsp
+          idv select 0.7.0
+          echo "$(idris2 --version)"
+          echo "$(which idris2-lsp)"
+          test "$(idris2 --version)" = 'Idris 2, version 0.7.0-nightly'
           test "$(which idris2-lsp)" != ''
           echo "$(idris2-lsp --version)"
