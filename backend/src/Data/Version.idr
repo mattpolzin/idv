@@ -15,7 +15,8 @@ record Version where
   ||| a dash (e.g. 'alpha.1' in 0.1.0-alpha.1).
   prereleaseIdentifier : Maybe String
   ||| The full tag of the version. In the context of git this is exactly the
-  ||| git tag. Elsewhere this field might hold other meaning.
+  ||| git tag. Elsewhere this field might hold other meaning. The tag is not
+  ||| considered when comparing two versions for equality or ordering.
   tag : String
 
 %name Version version
@@ -64,8 +65,10 @@ export
 version : (tag : String) -> (prereleaseIdentifier : Maybe String) -> Vect 3 Nat -> Version
 version tag pre [x, y, z] = V x y z pre tag
 
+||| Create a version from just the most common SemVer fields: major, minor, and
+||| patch
 export
-v : Nat -> Nat -> Nat -> Version
+v : (major : Nat) -> (minor : Nat) -> (patch : Nat) -> Version
 v k j l = V k j l Nothing ""
 
 ||| Drop any pre-release info from the Version. Note that this does
@@ -86,10 +89,8 @@ parseVersion str = do
     dropPrefix : String -> String
     dropPrefix str with (strM str)
       dropPrefix "" | StrNil = ""
-      dropPrefix _ | (StrCons x xs) =
-        if x == 'v'
-           then xs
-           else str
+      dropPrefix _ | (StrCons 'v' xs) = xs
+      dropPrefix _ | (StrCons  _  _ ) = str
 
     nonEmpty : String -> Maybe String
     nonEmpty str = case strM str of
@@ -97,10 +98,6 @@ parseVersion str = do
                         (StrCons _ _) => Just str
 
 ||| Parse the version as printed out by `idris2 --verison`.
-|||
-||| Important that this will return Nothing for pre-release
-||| versions which can be spotted by the commmit hash following
-||| the previous semantic version (0.4.0-b03395deb).
 export
 parseSpokenVersion : String -> Maybe Version
 parseSpokenVersion = parseVersion . drop (length "Idris 2, version ")

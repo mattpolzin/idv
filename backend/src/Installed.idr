@@ -81,8 +81,9 @@ selectVersion : HasIO io => Version -> io (Either String ())
 selectVersion proposedVersion = do
   Just localVersions <- listVersions
     | Nothing => pure $ Left "Could not look up local versions."
-  case find (== proposedVersion) localVersions of
-       Nothing      => pure $ Left "Idris 2 version \{proposedVersion} is not installed.\nInstalled versions: \{sort localVersions}."
+  let proposedVersion' = dropPrerelease proposedVersion
+  case find (== proposedVersion') localVersions of
+       Nothing      => pure $ Left "Idris 2 version \{proposedVersion'} is not installed.\nInstalled versions: \{sort localVersions}."
        Just version => do
          Right () <- unselect
            | Left err => pure $ Left err

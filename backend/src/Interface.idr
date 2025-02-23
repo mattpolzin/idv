@@ -351,7 +351,9 @@ listVersionsCommand = do
       buildSelectedFn : (selectedVersion : Maybe Version) 
                      -> (Maybe Version, Maybe Version) 
                      -> (Bool, Maybe Version, Maybe Version)
-      buildSelectedFn selectedVersion (l, r) = (l == selectedVersion, l, r)
+      buildSelectedFn selectedVersion (l, r) = 
+        let selectedVersion' = dropPrerelease <$> selectedVersion
+        in  (l == selectedVersion', l, r)
 
 export
 installCommand : HasIO io => (version : Version) -> (cleanAfter : Bool) -> io ()
